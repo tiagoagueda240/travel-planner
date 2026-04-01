@@ -1,0 +1,13 @@
+<div class="place-card">
+    <div class="card-image" [style.background-image]="'url(' + place.imageUrl + ')'">
+        <div class="card-actions">
+            <button (click)="onEdit()" title="Editar">✏️</button>
+            <button (click)="onDelete()" class="btn-delete" title="Eliminar">🗑️</button>
+        </div>
+    </div>
+
+    <div class="card-content">
+        <h3>{{ place.name }}</h3>
+        <a *ngIf="place.link" [href]="place.link" target="_blank" class="info-link">Ver Info →</a>
+    </div>
+</div>

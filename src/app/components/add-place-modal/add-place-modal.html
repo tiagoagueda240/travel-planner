@@ -1,0 +1,36 @@
+<div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+        <h2>{{ isEditing ? 'Editar Local' : 'Adicionar Novo Local' }}</h2>
+        <button class="close-btn" (click)="onClose()">×</button>
+    </div>
+
+    <form [formGroup]="placeForm" (ngSubmit)="onSubmit()">
+
+        <div class="form-group">
+            <label>O que queres visitar?</label>
+            <input type="text" formControlName="name" placeholder="Ex: Museu do Louvre" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <label>Link da Imagem</label>
+            <input type="text" formControlName="imageUrl" placeholder="https://..." autocomplete="off">
+            <div *ngIf="placeForm.get('imageUrl')?.value" class="image-preview"
+                [style.background-image]="'url(' + placeForm.get('imageUrl')?.value + ')'">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Link para Info/Bilhetes (Opcional)</label>
+            <input type="text" formControlName="link" placeholder="https://..." autocomplete="off">
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" (click)="onClose()">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="placeForm.invalid">
+                {{ isEditing ? 'Guardar Alterações' : 'Adicionar' }}
+            </button>
+        </div>
+
+    </form>
+</div>

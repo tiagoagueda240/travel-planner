@@ -1,0 +1,25 @@
+/* src/styles.scss */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #f8fafc; /* Fundo cinza muito claro e moderno */
+  color: #1e293b;
+}
+
+/* Scrollbar mais bonita */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* O fundo do Modal (Backdrop) */
+.custom-dialog-backdrop {
+  background-color: rgba(15, 23, 42, 0.4) !important; /* Azul escuro semi-transparente */
+  backdrop-filter: blur(5px); /* Efeito de vidro desfocado */
+  -webkit-backdrop-filter: blur(5px);
+}
