@@ -1,0 +1,116 @@
+<div class="public-container">
+  <!-- LOADING -->
+  <div class="state-center" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>A carregar roteiro…</p>
+  </div>
+
+  <!-- NOT FOUND -->
+  <div class="state-center" *ngIf="!loading && notFound">
+    <span class="state-icon">🔒</span>
+    <h2>Roteiro não encontrado</h2>
+    <p>O link pode ter expirado ou ter sido revogado.</p>
+  </div>
+
+  <!-- CONTENT -->
+  <ng-container *ngIf="!loading && !notFound && itinerary">
+    <header class="pub-header">
+      <div class="pub-header-inner">
+        <div>
+          <h1>{{ itinerary.name }}</h1>
+          <span class="readonly-badge">👁 Apenas leitura</span>
+        </div>
+        <div class="date-range" *ngIf="itinerary.startDate && itinerary.endDate">
+          {{ itinerary.startDate | date: 'dd MMM yyyy' : '' : 'pt' }} →
+          {{ itinerary.endDate | date: 'dd MMM yyyy' : '' : 'pt' }}
+        </div>
+      </div>
+    </header>
+
+    <div class="pub-tabs">
+      <button class="tab-btn" [class.active]="activeTab === 'dias'" (click)="activeTab = 'dias'">
+        🗓 Dias
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'lista'" (click)="activeTab = 'lista'">
+        📍 Por planear
+      </button>
+    </div>
+
+    <!-- DAYS TAB -->
+    <div class="pub-body" *ngIf="activeTab === 'dias'">
+      <div *ngIf="days.length === 0" class="empty-state">
+        <p>Nenhum dia planeado ainda.</p>
+      </div>
+
+      <div class="days-grid">
+        <div *ngFor="let day of days" class="day-card">
+          <div class="day-header">
+            <span class="day-number">Dia {{ day.dayNumber }}</span>
+            <span class="day-date" *ngIf="day.dateLabel">{{ day.dateLabel }}</span>
+            <span class="badge">{{ day.places.length }}</span>
+          </div>
+          <div class="place-list">
+            <div *ngIf="day.places.length === 0" class="no-places">Sem locais</div>
+            <div *ngFor="let place of day.places" class="place-item">
+              <span
+                class="place-thumb"
+                *ngIf="place.imageUrl"
+                [style.background-image]="'url(' + place.imageUrl + ')'"
+              ></span>
+              <span class="place-dot" *ngIf="!place.imageUrl"></span>
+              <div class="place-info">
+                <span class="place-name">{{ place.name }}</span>
+                <a
+                  *ngIf="place.link"
+                  [href]="place.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="place-link"
+                  >Ver mais ↗</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WISHLIST TAB -->
+    <div class="pub-body" *ngIf="activeTab === 'lista'">
+      <div *ngIf="wishlistGroups.length === 0" class="empty-state">
+        <p>Tudo planeado! 🎉</p>
+      </div>
+
+      <ng-container *ngFor="let group of wishlistGroups">
+        <div class="country-section">
+          <h3 class="country-title">{{ group.country.name }}</h3>
+
+          <ng-container *ngFor="let cityGroup of group.cities">
+            <h4 class="city-title">{{ cityGroup.city.name }}</h4>
+            <div class="place-list">
+              <div *ngFor="let place of cityGroup.places" class="place-item">
+                <span
+                  class="place-thumb"
+                  *ngIf="place.imageUrl"
+                  [style.background-image]="'url(' + place.imageUrl + ')'"
+                ></span>
+                <span class="place-dot" *ngIf="!place.imageUrl"></span>
+                <div class="place-info">
+                  <span class="place-name">{{ place.name }}</span>
+                  <a
+                    *ngIf="place.link"
+                    [href]="place.link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="place-link"
+                    >Ver mais ↗</a
+                  >
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>

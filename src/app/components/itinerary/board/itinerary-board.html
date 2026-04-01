@@ -1,0 +1,145 @@
+<div class="board-container cdkDropListGroup">
+  <nav class="top-nav">
+    <div class="nav-left">
+      <a [routerLink]="['/itinerario', itineraryId]" class="back-btn">←</a>
+      <div class="trip-title">
+        <h2>{{ itineraryName }}</h2>
+        <span class="country-tag">Planeamento</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-share" (click)="showShareModal = true">🔗 Partilhar</button>
+      <button
+        class="btn-toggle-map"
+        [class.active]="showMap"
+        (click)="showMap = !showMap"
+        *ngIf="allPlaces.length > 0"
+      >
+        {{ showMap ? '☰ Plano' : '🗺️ Mapa' }}
+      </button>
+      <button class="btn-magic" *ngIf="wishlistGroups.length > 0" (click)="distributeSmartly()">
+        🪄 Distribuição Inteligente
+      </button>
+    </div>
+  </nav>
+
+  <app-share-modal
+    *ngIf="showShareModal && itinerary"
+    [itinerary]="itinerary"
+    [isOwner]="isOwner"
+    (closed)="showShareModal = false"
+  ></app-share-modal>
+
+  <div class="content-wrapper" [class.hidden-view]="showMap">
+    <div class="itinerary-view">
+      <!-- SIDEBAR: grouped by country → city -->
+      <aside class="sidebar">
+        <div class="wishlist-section">
+          <div class="wishlist-header">
+            <h4>Por planear</h4>
+            <span class="count-badge">{{ unassignedCount }}</span>
+          </div>
+
+          <div class="wishlist-empty" *ngIf="wishlistGroups.length === 0">
+            <p>Tudo planeado! 🎉</p>
+          </div>
+
+          <!-- Permanent drop zone: always accepts drags from day columns -->
+          <div
+            id="wishlist-unassign"
+            cdkDropList
+            [cdkDropListData]="unassignZone"
+            [cdkDropListConnectedTo]="allDropListIds"
+            (cdkDropListDropped)="drop($event, null)"
+            class="drop-list unassign-zone"
+            [class.unassign-zone--active]="wishlistGroups.length === 0"
+          >
+            <span *ngIf="unassignZone.length === 0" class="unassign-hint"
+              >Arrasta aqui para desplanear</span
+            >
+            <app-place-card
+              *ngFor="let place of unassignZone"
+              [place]="place"
+              [compact]="true"
+              [showDelete]="false"
+              cdkDrag
+            ></app-place-card>
+          </div>
+
+          <ng-container *ngFor="let group of wishlistGroups">
+            <div class="group-country">
+              <span class="group-country-label">{{ group.country.name }}</span>
+            </div>
+
+            <ng-container *ngFor="let cityGroup of group.cities">
+              <div class="group-city">
+                <span class="group-city-label">{{ cityGroup.city.name }}</span>
+              </div>
+
+              <div
+                [id]="'wishlist-' + cityGroup.city.id"
+                cdkDropList
+                [cdkDropListData]="cityGroup.places"
+                [cdkDropListConnectedTo]="allDropListIds"
+                (cdkDropListDropped)="drop($event, null)"
+                class="drop-list wishlist-list"
+              >
+                <app-place-card
+                  *ngFor="let place of cityGroup.places"
+                  [place]="place"
+                  [compact]="true"
+                  [showDelete]="false"
+                  cdkDrag
+                ></app-place-card>
+              </div>
+            </ng-container>
+          </ng-container>
+        </div>
+      </aside>
+
+      <!-- MAIN: day columns -->
+      <main class="days-container">
+        <div class="board-empty-state" *ngIf="days.length === 0">
+          <div class="calendar-illustration">📅</div>
+          <h2>Sem dias gerados</h2>
+          <p>Define as datas do itinerário no dashboard para gerar os dias.</p>
+        </div>
+
+        <ng-container *ngIf="days.length > 0">
+          <div *ngFor="let day of days" class="day-column">
+            <div class="day-header">
+              <div>
+                <h3>Dia {{ day.dayNumber }}</h3>
+                <p class="date-label" *ngIf="day.dateLabel">{{ day.dateLabel }}</p>
+              </div>
+              <span class="badge">{{ day.places.length }}</span>
+            </div>
+
+            <div
+              [id]="'day-' + day.dayNumber"
+              cdkDropList
+              [cdkDropListData]="day.places"
+              [cdkDropListConnectedTo]="allDropListIds"
+              (cdkDropListDropped)="drop($event, day.dayNumber)"
+              class="drop-list day-list"
+            >
+              <app-place-card
+                *ngFor="let place of day.places"
+                [place]="place"
+                [compact]="true"
+                [showDelete]="false"
+                cdkDrag
+                (unassign)="unassignPlace($event)"
+              ></app-place-card>
+            </div>
+          </div>
+        </ng-container>
+      </main>
+    </div>
+  </div>
+
+  <!-- Map view -->
+  <div class="board-map-container" *ngIf="showMap">
+    <app-map-view [places]="mapPlaces" [visible]="showMap"></app-map-view>
+  </div>
+</div>

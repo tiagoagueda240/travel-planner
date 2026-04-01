@@ -1,0 +1,462 @@
+/* --- COMPACT ROW --- */
+.place-card--compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 8px 10px;
+  cursor: grab;
+  transition: all 0.2s;
+  height: 56px;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    background: #f8fafc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .compact-actions {
+      opacity: 1;
+    }
+  }
+
+  &.is-confirming .compact-actions {
+    opacity: 1;
+  }
+}
+
+.compact-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background-color: #e5e7eb;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+
+  &.has-image {
+    cursor: zoom-in;
+  }
+}
+
+.compact-name {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+
+  button {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.05);
+    transition: all 0.15s;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .btn-delete:hover {
+    background: #fee2e2;
+  }
+  .btn-cancel-delete {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .btn-confirm-delete {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    animation: pulse-red 1s ease infinite;
+    &:hover {
+      background: #dc2626;
+    }
+  }
+  .btn-unassign {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    &:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+  }
+}
+
+/* Red outline on compact card when confirming */
+.place-card--compact.is-confirming {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+
+  .compact-actions {
+    opacity: 1;
+  }
+}
+
+/* --- FULL CARD --- */
+.place-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  cursor: grab;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  position: relative;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    .card-actions {
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.card-image {
+  height: 180px;
+  width: 100%;
+  background-color: #f3f4f6;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+
+  &.has-image {
+    cursor: zoom-in;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
+    pointer-events: none;
+  }
+}
+
+.card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+
+  button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+      background: white;
+    }
+  }
+
+  .btn-delete:hover {
+    background: #fee2e2;
+  }
+
+  .btn-cancel-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s;
+    &:hover {
+      background: white;
+      transform: scale(1.1);
+    }
+  }
+
+  .btn-confirm-delete {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);
+    transition: all 0.2s;
+    animation: pulse-red 1s ease infinite;
+    &:hover {
+      background: #dc2626;
+      transform: scale(1.05);
+    }
+  }
+}
+
+@keyframes pulse-red {
+  0%,
+  100% {
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 2px 18px rgba(239, 68, 68, 0.85);
+  }
+}
+
+.is-confirming .card-actions {
+  opacity: 1;
+}
+
+/* Red overlay on full card when confirming */
+.place-card.is-confirming {
+  box-shadow:
+    0 0 0 2px #ef4444,
+    0 8px 24px rgba(239, 68, 68, 0.2);
+
+  .card-image::after {
+    background: linear-gradient(
+      to top,
+      rgba(239, 68, 68, 0.55) 0%,
+      rgba(239, 68, 68, 0.15) 60%,
+      transparent 100%
+    );
+  }
+}
+
+.card-content {
+  padding: 16px;
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .info-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 6px 12px;
+    background-color: rgba(79, 70, 229, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: rgba(79, 70, 229, 0.15);
+      color: #4338ca;
+    }
+  }
+}
+
+/* --- CONFIRM OVERLAY --- */
+.confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(239, 68, 68, 0.93);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 10;
+  animation: fadeIn 0.15s ease;
+  border-radius: inherit;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.confirm-label {
+  color: white;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin: 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-yes {
+  padding: 8px 20px;
+  background: white;
+  color: #dc2626;
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover {
+    background: #fff1f2;
+    transform: scale(1.04);
+  }
+}
+
+.confirm-no {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* compact: overlay covers just the row */
+.place-card--compact {
+  position: relative;
+
+  .confirm-overlay {
+    border-radius: 10px;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0 10px;
+
+    .confirm-label {
+      font-size: 0.78rem;
+    }
+    .confirm-yes {
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+    .confirm-no {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+  }
+}
+
+/* --- LIGHTBOX --- */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 16px;
+  object-fit: contain;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  animation: scaleIn 0.2s ease;
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}

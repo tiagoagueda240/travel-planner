@@ -1,0 +1,28 @@
+<div class="ac-root">
+  <div class="ac-input-wrap">
+    <input
+      class="ac-input"
+      type="text"
+      [value]="value"
+      [placeholder]="placeholder"
+      (input)="onInput($any($event.target).value)"
+      (keydown)="onKeydown($event)"
+      autocomplete="off"
+    />
+    <span class="ac-spinner" *ngIf="loading"></span>
+  </div>
+
+  <ul class="ac-dropdown" *ngIf="open && filtered.length > 0">
+    <li
+      *ngFor="let item of filtered; let i = index"
+      class="ac-item"
+      [class.active]="i === activeIndex"
+      (mousedown)="pick(item)"
+    >
+      {{ item }}
+    </li>
+    <li *ngIf="mode === 'place'" class="ac-footer">
+      Via <a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a>
+    </li>
+  </ul>
+</div>

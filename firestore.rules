@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- FUNÇÕES AUXILIARES ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function itineraryData(itineraryId) {
+      return get(/databases/$(database)/documents/itineraries/$(itineraryId)).data;
+    }
+
+    // Dono do roteiro
+    function isOwner(itineraryId) {
+      return isSignedIn() && itineraryData(itineraryId).userId == request.auth.uid;
+    }
+
+    // Colaborador convidado por email
+    function isCollaborator(itineraryId) {
+      let doc = itineraryData(itineraryId);
+      return isSignedIn()
+        && 'collaborators' in doc
+        && request.auth.token.email in doc.collaborators;
+    }
+
+    // Roteiro tem link público ativo
+    function isPubliclyShared(itineraryId) {
+      let doc = itineraryData(itineraryId);
+      return 'shareToken' in doc && doc.shareToken != null;
+    }
+
+    // Pode ler (dono, colaborador ou link público)
+    function canRead(itineraryId) {
+      return isOwner(itineraryId) || isCollaborator(itineraryId) || isPubliclyShared(itineraryId);
+    }
+
+    // Pode editar (apenas dono e colaboradores)
+    function canEdit(itineraryId) {
+      return isOwner(itineraryId) || isCollaborator(itineraryId);
+    }
+
+    // --- ITINERÁRIOS ---
+    match /itineraries/{itineraryId} {
+
+      // Leitura: dono, colaborador ou link público ativo
+      allow read: if
+        (isSignedIn() && resource.data.userId == request.auth.uid) ||
+        (isSignedIn()
+          && 'collaborators' in resource.data
+          && request.auth.token.email in resource.data.collaborators) ||
+        ('shareToken' in resource.data && resource.data.shareToken != null);
+
+      // Criação: qualquer utilizador autenticado (apenas pode criar para si próprio)
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+
+      // Atualização:
+      //   - Dono: pode alterar tudo (incluindo collaborators e shareToken)
+      //   - Colaborador: pode editar conteúdo mas NÃO pode alterar partilha
+      allow update: if isOwner(itineraryId) || (
+        isCollaborator(itineraryId) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['userId', 'collaborators', 'shareToken'])
+      );
+
+      // Eliminação: apenas o dono
+      allow delete: if isOwner(itineraryId);
+
+      // --- PAÍSES ---
+      match /countries/{countryId} {
+        allow read: if canRead(itineraryId);
+        allow write: if canEdit(itineraryId);
+
+        // --- CIDADES ---
+        match /cities/{cityId} {
+          allow read: if canRead(itineraryId);
+          allow write: if canEdit(itineraryId);
+
+          // --- LOCAIS ---
+          match /places/{placeId} {
+            allow read: if canRead(itineraryId);
+            allow write: if canEdit(itineraryId);
+          }
+        }
+      }
+    }
+
+    // --- COLLECTION GROUP QUERIES ---
+    // Necessário para getCitiesByItinerary() e getPlacesByItinerary()
+    // que usam collectionGroup() em vez de paths diretos.
+
+    match /{path=**}/cities/{cityId} {
+      allow read: if resource.data.itineraryId != null
+        && canRead(resource.data.itineraryId);
+    }
+
+    match /{path=**}/places/{placeId} {
+      allow read: if resource.data.itineraryId != null
+        && canRead(resource.data.itineraryId);
+    }
+  }
+}

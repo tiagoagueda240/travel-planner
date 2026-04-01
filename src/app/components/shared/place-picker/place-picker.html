@@ -1,0 +1,58 @@
+<div class="place-picker">
+  <button class="picker-toggle" type="button" (click)="toggle()">
+    <span class="toggle-icon">🗺</span>
+    <span>Sugerir local</span>
+    <span class="toggle-arrow">{{ expanded ? '▲' : '▼' }}</span>
+  </button>
+
+  <div class="picker-body" *ngIf="expanded">
+    <div class="city-search">
+      <input
+        type="text"
+        [(ngModel)]="cityQuery"
+        placeholder="Cidade (ex: Sintra, Cascais...)"
+        (keyup.enter)="searchPlaces()"
+      />
+      <button
+        type="button"
+        class="btn-search"
+        (click)="searchPlaces()"
+        [disabled]="loading || !cityQuery.trim()"
+      >
+        <span *ngIf="!loading">Pesquisar</span>
+        <span *ngIf="loading" class="spinner-sm"></span>
+      </button>
+    </div>
+
+    <div class="state-msg" *ngIf="loading && places.length === 0">
+      <span class="spinner-sm"></span> A pesquisar…
+    </div>
+    <div class="state-msg error" *ngIf="error && !loading">Erro ao pesquisar. Tenta novamente.</div>
+    <div class="state-msg" *ngIf="notFound && !loading">
+      Cidade não encontrada. Tenta outro nome.
+    </div>
+    <div
+      class="state-msg"
+      *ngIf="searched && !loading && !error && !notFound && places.length === 0"
+    >
+      Nenhum local encontrado para "{{ cityQuery }}".
+    </div>
+
+    <div class="places-list" *ngIf="places.length > 0">
+      <button
+        *ngFor="let place of places"
+        type="button"
+        class="place-chip"
+        (click)="pick(place)"
+        [title]="kindLabel(place.kinds)"
+      >
+        <span class="chip-name">{{ place.name }}</span>
+        <span class="chip-kind">{{ kindLabel(place.kinds) }}</span>
+      </button>
+    </div>
+
+    <p class="picker-note" *ngIf="places.length > 0">
+      Fornecido por <a href="https://opentripmap.io" target="_blank" rel="noopener">OpenTripMap</a>
+    </p>
+  </div>
+</div>

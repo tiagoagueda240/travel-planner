@@ -1,0 +1,65 @@
+<div class="picker-root" [class.disabled]="disabled">
+  <!-- TRIGGER -->
+  <div class="picker-trigger" (click)="toggle($event)">
+    <div *ngIf="value" class="trigger-preview">
+      <span class="preview-thumb" [style.background-image]="'url(' + value + ')'"></span>
+      <span class="preview-label">Mudar imagem</span>
+      <button class="btn-clear" (click)="clear($event)" title="Remover imagem">✕</button>
+    </div>
+
+    <div *ngIf="!value" class="trigger-placeholder">
+      <span class="photo-icon">🖼</span>
+      <span>Imagem</span>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div class="picker-panel" *ngIf="panelOpen" (click)="$event.stopPropagation()">
+    <div class="panel-search">
+      <input
+        type="text"
+        [(ngModel)]="query"
+        placeholder="Pesquisar fotos..."
+        (keyup.enter)="search()"
+        autofocus
+      />
+      <button (click)="search()" [disabled]="loading || !query.trim()">
+        <span *ngIf="!loading">🔍</span>
+        <span *ngIf="loading" class="spinner-sm"></span>
+      </button>
+    </div>
+
+    <div class="panel-loading" *ngIf="loading && results.length === 0">
+      <span class="spinner-sm"></span>
+    </div>
+
+    <div class="panel-error" *ngIf="error && !loading">
+      <p>Erro ao pesquisar. Verifica a chave Pexels API.</p>
+    </div>
+
+    <div class="panel-empty" *ngIf="searched && !loading && !error && results.length === 0">
+      <p>Nenhum resultado para "{{ query }}".</p>
+    </div>
+
+    <div class="panel-hint" *ngIf="!searched && !loading">
+      <p>Escreve o que pretendes e prime Enter.</p>
+    </div>
+
+    <div class="results-grid" *ngIf="results.length > 0">
+      <div
+        *ngFor="let photo of results"
+        class="result-item"
+        [title]="photo.alt"
+        (click)="pick(photo, $event)"
+      >
+        <img [src]="photo.src.tiny" [alt]="photo.alt" loading="lazy" />
+      </div>
+    </div>
+
+    <div class="panel-footer" *ngIf="results.length > 0">
+      <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer"
+        >Fotos via Pexels</a
+      >
+    </div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<div class="drp-wrapper">
+  <div class="drp-capsule" [class.open]="showCalendar">
+    <div
+      class="drp-field"
+      [class.active]="showCalendar && selectingType === 'start'"
+      (click)="openCalendar('start')"
+    >
+      <label>Início</label>
+      <span class="drp-value">{{ formatDate(displayStart) }}</span>
+    </div>
+    <div class="drp-divider"></div>
+    <div
+      class="drp-field"
+      [class.active]="showCalendar && selectingType === 'end'"
+      (click)="openCalendar('end')"
+    >
+      <label>Fim</label>
+      <span class="drp-value">{{ formatDate(displayEnd) }}</span>
+    </div>
+  </div>
+
+  <div class="drp-popup" *ngIf="showCalendar">
+    <div class="drp-header">
+      <button class="drp-nav" (click)="changeMonth(-1)">‹</button>
+      <strong>{{ monthYearLabel }}</strong>
+      <button class="drp-nav" (click)="changeMonth(1)">›</button>
+      <button class="drp-nav drp-close" (click)="closeCalendar()">×</button>
+    </div>
+    <div class="drp-weekdays">
+      <span *ngFor="let w of weekDays">{{ w }}</span>
+    </div>
+    <div class="drp-grid">
+      <div
+        *ngFor="let day of calendarDays"
+        class="drp-day"
+        [class.other-month]="!day.isCurrentMonth"
+        [class.selected]="day.isStart || day.isEnd"
+        [class.in-range]="day.isBetween"
+        [class.start-edge]="day.isStart && displayEnd && displayStart !== displayEnd"
+        [class.end-edge]="day.isEnd && displayStart && displayStart !== displayEnd"
+        (click)="selectDate(day)"
+      >
+        <span class="drp-day-num">{{ day.dayNumber }}</span>
+      </div>
+    </div>
+    <p class="drp-hint" *ngIf="selectingType === 'end'">Seleciona a data de fim</p>
+  </div>
+</div>

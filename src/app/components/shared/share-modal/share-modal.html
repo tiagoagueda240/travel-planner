@@ -1,0 +1,92 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Partilhar roteiro</h2>
+      <button class="btn-close" (click)="close()">✕</button>
+    </div>
+
+    <div class="modal-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'colaboradores'"
+        (click)="activeTab = 'colaboradores'"
+      >
+        👥 Colaboradores
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'link'" (click)="activeTab = 'link'">
+        🔗 Link público
+      </button>
+    </div>
+
+    <!-- COLABORADORES -->
+    <div *ngIf="activeTab === 'colaboradores'" class="tab-content">
+      <p class="tab-description">Convida pessoas com conta para editar este roteiro.</p>
+
+      <div *ngIf="isOwner" class="invite-row">
+        <input
+          type="email"
+          [(ngModel)]="newCollaboratorEmail"
+          placeholder="email@exemplo.com"
+          (keyup.enter)="addCollaborator()"
+          class="input-email"
+        />
+        <button
+          class="btn-invite"
+          (click)="addCollaborator()"
+          [disabled]="isLoading || !newCollaboratorEmail"
+        >
+          Convidar
+        </button>
+      </div>
+
+      <div class="collaborator-list">
+        <div *ngIf="collaborators.length === 0" class="empty-state">
+          <span>Ainda não há colaboradores.</span>
+        </div>
+        <div *ngFor="let email of collaborators" class="collaborator-item">
+          <span class="collab-avatar">{{ email[0].toUpperCase() }}</span>
+          <span class="collab-email">{{ email }}</span>
+          <button
+            *ngIf="isOwner"
+            class="btn-remove"
+            (click)="removeCollaborator(email)"
+            [disabled]="isLoading"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINK PÚBLICO -->
+    <div *ngIf="activeTab === 'link'" class="tab-content">
+      <p class="tab-description">
+        Partilha um link de leitura com quem não tem conta. Podem ver o roteiro mas não editar.
+      </p>
+
+      <div *ngIf="!shareUrl" class="link-empty">
+        <span class="link-icon">🔒</span>
+        <p>Nenhum link ativo.</p>
+        <button
+          *ngIf="isOwner"
+          class="btn-generate"
+          (click)="generateLink()"
+          [disabled]="isLoading"
+        >
+          Gerar link
+        </button>
+        <p *ngIf="!isOwner" class="readonly-note">Apenas o dono pode gerar o link.</p>
+      </div>
+
+      <div *ngIf="shareUrl" class="link-active">
+        <div class="link-box">
+          <span class="link-text">{{ shareUrl }}</span>
+          <button class="btn-copy" (click)="copyLink()">Copiar</button>
+        </div>
+        <button *ngIf="isOwner" class="btn-revoke" (click)="revokeLink()" [disabled]="isLoading">
+          Revogar link
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,75 @@
+<!-- COMPACT: single row with thumbnail + name -->
+<div
+  *ngIf="compact"
+  class="place-card place-card--compact"
+  [class.is-confirming]="confirmingDelete"
+>
+  <div
+    class="compact-thumb"
+    [style.background-image]="cardImageStyle"
+    (click)="openLightbox()"
+    [class.has-image]="place.imageUrl"
+  ></div>
+  <span class="compact-name">{{ place.name }}</span>
+  <div class="compact-actions">
+    <ng-container *ngIf="showDelete && !confirmingDelete">
+      <button (click)="onDelete()" class="btn-delete" title="Eliminar">🗑️</button>
+    </ng-container>
+    <ng-container *ngIf="showDelete && confirmingDelete">
+      <button (click)="cancelDelete()" class="btn-cancel-delete" title="Cancelar">✕</button>
+      <button (click)="onDelete()" class="btn-confirm-delete" title="Confirmar">✓</button>
+    </ng-container>
+    <ng-container *ngIf="!showDelete">
+      <button (click)="unassign.emit(place)" class="btn-unassign" title="Remover do dia">↩</button>
+    </ng-container>
+  </div>
+
+  <!-- Compact confirm overlay -->
+  <div *ngIf="confirmingDelete" class="confirm-overlay">
+    <span class="confirm-label">Eliminar?</span>
+    <button (click)="onDelete()" class="confirm-yes">Sim</button>
+    <button (click)="cancelDelete()" class="confirm-no">✕</button>
+  </div>
+</div>
+
+<!-- FULL card -->
+<div *ngIf="!compact" class="place-card" [class.is-confirming]="confirmingDelete">
+  <div
+    class="card-image"
+    [style.background-image]="cardImageStyle"
+    (click)="openLightbox()"
+    [class.has-image]="place.imageUrl"
+  >
+    <div class="card-actions" (click)="$event.stopPropagation()">
+      <ng-container *ngIf="!confirmingDelete">
+        <button (click)="onEdit()" title="Editar">✏️</button>
+        <button (click)="onDelete()" class="btn-delete" title="Eliminar">🗑️</button>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Full card confirm overlay -->
+  <div *ngIf="confirmingDelete" class="confirm-overlay" (click)="$event.stopPropagation()">
+    <p class="confirm-label">Eliminar este local?</p>
+    <div class="confirm-actions">
+      <button (click)="onDelete()" class="confirm-yes">Eliminar</button>
+      <button (click)="cancelDelete()" class="confirm-no">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="card-content">
+    <h3>{{ place.name }}</h3>
+    <a *ngIf="place.link" [href]="place.link" target="_blank" class="info-link">Ver Info →</a>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div *ngIf="lightboxOpen" class="lightbox-overlay" (click)="closeLightbox()">
+  <img
+    [src]="place.imageUrl"
+    [alt]="place.name"
+    class="lightbox-img"
+    (click)="$event.stopPropagation()"
+  />
+  <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+</div>
