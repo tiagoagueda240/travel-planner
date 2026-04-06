@@ -58,6 +58,25 @@
         ></app-date-range-picker>
       </div>
 
+      <div class="field-group">
+        <label>💰 Orçamento da Viagem</label>
+        <div class="budget-input-row">
+          <select class="currency-select" [(ngModel)]="editCurrency">
+            <option *ngFor="let c of currencyOptions" [value]="c.code">
+              {{ c.symbol }} {{ c.code }}
+            </option>
+          </select>
+          <input
+            type="number"
+            class="budget-number-input"
+            [(ngModel)]="editBudget"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
       <div class="settings-actions">
         <button
           class="btn-settings-save"
@@ -436,6 +455,22 @@
               <label>Link &uacute;til</label>
               <input type="text" [(ngModel)]="newPlaceLink" placeholder="https://..." />
             </div>
+            <div class="field-group">
+              <label
+                >💶 Custo Estimado <span class="label-hint">(bilhete, entrada, etc.)</span></label
+              >
+              <div class="cost-input-row">
+                <span class="cost-currency-label">{{ currencySymbol }}</span>
+                <input
+                  type="number"
+                  class="cost-input"
+                  [(ngModel)]="newPlaceCost"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
           </div>
           <div class="place-form-actions">
             <button class="btn-add cancel" (click)="closePlaceForm()">Cancelar</button>
@@ -661,6 +696,21 @@
               {{ newBookingShowMore ? 'Mostrar menos' : '+ Mais opções' }}
             </button>
 
+            <div class="field-group cost-field-booking">
+              <label>💶 Custo <span class="label-hint">(total da reserva)</span></label>
+              <div class="cost-input-row">
+                <span class="cost-currency-label">{{ currencySymbol }}</span>
+                <input
+                  type="number"
+                  class="cost-input"
+                  [(ngModel)]="newBookingCost"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
             <ng-container *ngIf="newBookingShowMore">
               <div class="field-group">
                 <label>Link</label>
@@ -725,22 +775,31 @@
               </div>
               <div class="booking-notes" *ngIf="booking.notes">{{ booking.notes }}</div>
             </div>
-            <div class="booking-actions">
-              <a
-                *ngIf="booking.link"
-                [href]="booking.link"
-                target="_blank"
-                class="btn-booking-link"
-                title="Abrir link"
-              >
-                🔗
-              </a>
-              <button class="btn-booking-edit" (click)="openBookingForm(booking)" title="Editar">
-                ✏️
-              </button>
-              <button class="btn-booking-delete" (click)="deleteBooking(booking)" title="Eliminar">
-                🗑️
-              </button>
+            <div class="booking-right">
+              <div class="booking-cost-badge" *ngIf="booking.cost">
+                {{ currencySymbol }}{{ booking.cost | number: '1.0-2' }}
+              </div>
+              <div class="booking-actions">
+                <a
+                  *ngIf="booking.link"
+                  [href]="booking.link"
+                  target="_blank"
+                  class="btn-booking-link"
+                  title="Abrir link"
+                >
+                  🔗
+                </a>
+                <button class="btn-booking-edit" (click)="openBookingForm(booking)" title="Editar">
+                  ✏️
+                </button>
+                <button
+                  class="btn-booking-delete"
+                  (click)="deleteBooking(booking)"
+                  title="Eliminar"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           </div>
 

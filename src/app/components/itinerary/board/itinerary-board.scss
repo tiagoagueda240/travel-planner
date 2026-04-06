@@ -1240,6 +1240,18 @@
     padding: 2px 6px;
     border-radius: 6px;
   }
+
+  .dbc-cost {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #065f46;
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border: 1px solid #6ee7b7;
+    padding: 2px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+  }
 }
 
 /* ── SIDEBAR BOOKINGS ── */
@@ -1403,6 +1415,305 @@
   font-weight: 600;
   color: #94a3b8;
   margin-top: 3px;
+}
+
+/* ── DAY COST BADGE ── */
+.day-cost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #065f46;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border: 1px solid #6ee7b7;
+  border-radius: 8px;
+  padding: 3px 9px;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+  animation: fadeIn 0.3s ease;
+
+  .day-cost-icon {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── BUDGET STRIP ── */
+.budget-strip {
+  flex-shrink: 0;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0 40px;
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+
+  &:hover {
+    background: #fafbff;
+  }
+
+  &--warning {
+    background: linear-gradient(to right, #fffbeb, white);
+    border-bottom-color: #fde68a;
+  }
+
+  &--danger {
+    background: linear-gradient(to right, #fff1f1, white);
+    border-bottom-color: #fca5a5;
+  }
+}
+
+.budget-strip-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.budget-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.budget-kpi-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.budget-kpi-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.01em;
+
+  &.spent {
+    color: #374151;
+  }
+
+  &.remaining {
+    color: #059669;
+
+    &.negative {
+      color: #dc2626;
+    }
+  }
+}
+
+.kpi-remaining-danger .budget-kpi-value {
+  color: #dc2626 !important;
+}
+
+.budget-bar-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.budget-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.budget-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.fill-ok {
+    background: linear-gradient(90deg, #34d399, #059669);
+  }
+
+  &.fill-warning {
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  }
+
+  &.fill-danger {
+    background: linear-gradient(90deg, #f87171, #dc2626);
+    animation: budget-pulse 1.5s ease infinite;
+  }
+}
+
+@keyframes budget-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+.budget-bar-pct {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #6b7280;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: right;
+}
+
+.budget-toggle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: #6b7280;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &:hover {
+    background: #e0e7ff;
+    border-color: #c7d2fe;
+    svg {
+      stroke: #6366f1;
+    }
+  }
+
+  &.rotated svg {
+    transform: rotate(180deg);
+  }
+}
+
+/* ── BUDGET BREAKDOWN ── */
+.budget-breakdown {
+  padding: 16px 0 18px;
+  border-top: 1px dashed #f1f5f9;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.budget-cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 8px 14px;
+  min-width: 160px;
+  flex: 1;
+  transition: all 0.18s;
+
+  &:hover {
+    border-color: #e0e7ff;
+    background: #f0f4ff;
+  }
+
+  &.cat-zero {
+    opacity: 0.45;
+  }
+
+  .cat-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .cat-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+    flex-shrink: 0;
+  }
+
+  .cat-bar-outer {
+    flex: 1;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    min-width: 30px;
+  }
+
+  .cat-bar-inner {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &[data-type='flight'] {
+      background: #6366f1;
+    }
+    &[data-type='hotel'] {
+      background: #10b981;
+    }
+    &[data-type='place'] {
+      background: #f97316;
+    }
+    &[data-type='bus'] {
+      background: #f59e0b;
+    }
+    &[data-type='other'] {
+      background: #94a3b8;
+    }
+  }
+
+  .cat-amount {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #111827;
+    flex-shrink: 0;
+  }
+}
+
+/* ── BUDGET CTA ── */
+.budget-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 40px;
+  background: linear-gradient(to right, #eff6ff, white);
+  border-bottom: 1px solid #dbeafe;
+  flex-shrink: 0;
+
+  .budget-cta-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .budget-cta-text {
+    font-size: 0.78rem;
+    color: #4b5563;
+    font-weight: 500;
+
+    strong {
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+  }
 }
 
 /* ── DAY NOTES ── */

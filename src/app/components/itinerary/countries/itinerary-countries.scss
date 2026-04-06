@@ -1668,3 +1668,119 @@
     border-radius: 12px;
   }
 }
+
+/* ── BUDGET / COST INPUTS ── */
+.budget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .currency-select {
+    flex-shrink: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    background: #f9fafb;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: #6366f1;
+    }
+  }
+
+  .budget-number-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    background: #f9fafb;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: #6366f1;
+      background: white;
+    }
+
+    &::placeholder {
+      color: #d1d5db;
+    }
+  }
+}
+
+.cost-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f9fafb;
+  transition: border-color 0.2s;
+
+  &:focus-within {
+    border-color: #6366f1;
+    background: white;
+  }
+
+  .cost-currency-label {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-right: 1.5px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+
+  .cost-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    outline: none;
+
+    &::placeholder {
+      color: #d1d5db;
+      font-weight: 400;
+    }
+  }
+}
+
+.cost-field-booking {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ── BOOKING CARD RIGHT SECTION ── */
+.booking-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.booking-cost-badge {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #065f46;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #a7f3d0;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}

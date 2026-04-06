@@ -8,6 +8,8 @@ export interface Itinerary {
   collaborators?: string[]; // emails com acesso de edição
   shareToken?: string | null; // token público para leitura (null = não partilhado)
   dayNotes?: Record<string, string>; // keyed by dayNumber (as string)
+  budget?: number | null; // orçamento total da viagem
+  currency?: string; // moeda base (default 'EUR')
 }
 
 export interface Country {
@@ -44,6 +46,7 @@ export interface Place {
   orderIndex?: number;
   lat?: number | null;
   lon?: number | null;
+  cost?: number | null; // custo estimado/real do local (bilhete, entrada, etc.)
 }
 
 export interface DateRange {
@@ -87,4 +90,5 @@ export interface Booking {
   link?: string;
   reference?: string;
   notes?: string;
+  cost?: number | null; // custo desta reserva
 }

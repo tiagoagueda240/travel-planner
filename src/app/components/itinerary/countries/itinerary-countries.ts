@@ -67,8 +67,27 @@ export class ItineraryCountriesComponent implements OnInit {
   editName = '';
   editStartDate = '';
   editEndDate = '';
+  editBudget: number | null = null;
+  editCurrency = 'EUR';
   confirmDeleteItinerary = false;
   savingSettings = false;
+
+  readonly currencyOptions = [
+    { code: 'EUR', symbol: '€', label: 'Euro' },
+    { code: 'USD', symbol: '$', label: 'Dólar EUA' },
+    { code: 'GBP', symbol: '£', label: 'Libra Esterlina' },
+    { code: 'CHF', symbol: 'Fr', label: 'Franco Suíço' },
+    { code: 'JPY', symbol: '¥', label: 'Iene Japonês' },
+    { code: 'BRL', symbol: 'R$', label: 'Real Brasileiro' },
+    { code: 'CAD', symbol: 'C$', label: 'Dólar Canadiano' },
+    { code: 'AUD', symbol: 'A$', label: 'Dólar Australiano' },
+    { code: 'SEK', symbol: 'kr', label: 'Coroa Sueca' },
+    { code: 'NOK', symbol: 'kr', label: 'Coroa Norueguesa' },
+    { code: 'DKK', symbol: 'kr', label: 'Coroa Dinamarquesa' },
+    { code: 'PLN', symbol: 'zł', label: 'Złoty Polaco' },
+    { code: 'CZK', symbol: 'Kč', label: 'Coroa Checa' },
+    { code: 'AED', symbol: 'د.إ', label: 'Dirham Emirados' },
+  ];
 
   // Level 1 – Countries
   countries: Country[] = [];
@@ -107,6 +126,7 @@ export class ItineraryCountriesComponent implements OnInit {
   newPlaceLink = '';
   newPlaceLat: number | null = null;
   newPlaceLon: number | null = null;
+  newPlaceCost: number | null = null;
 
   // Level 4 – Bookings
   bookings: Booking[] = [];
@@ -132,6 +152,7 @@ export class ItineraryCountriesComponent implements OnInit {
   newBookingLocationCity = '';
   newBookingLocationLat: number | null = null;
   newBookingLocationLon: number | null = null;
+  newBookingCost: number | null = null;
 
   readonly bookingTypes: { value: BookingType; label: string; icon: string }[] = [
     { value: 'flight', label: 'Voo', icon: '✈️' },
@@ -157,6 +178,11 @@ export class ItineraryCountriesComponent implements OnInit {
       default:
         return false;
     }
+  }
+
+  get currencySymbol(): string {
+    const currency = this.itinerary?.currency ?? 'EUR';
+    return this.currencyOptions.find((c) => c.code === currency)?.symbol ?? '€';
   }
 
   private citiesSub: Subscription | null = null;
@@ -456,6 +482,7 @@ export class ItineraryCountriesComponent implements OnInit {
     this.newPlaceLink = place?.link ?? '';
     this.newPlaceLat = place?.lat ?? null;
     this.newPlaceLon = place?.lon ?? null;
+    this.newPlaceCost = place?.cost ?? null;
     this.showPlaceForm = true;
   }
 
@@ -473,6 +500,7 @@ export class ItineraryCountriesComponent implements OnInit {
     this.newPlaceLink = '';
     this.newPlaceLat = null;
     this.newPlaceLon = null;
+    this.newPlaceCost = null;
   }
 
   async savePlace(): Promise<void> {
@@ -486,6 +514,7 @@ export class ItineraryCountriesComponent implements OnInit {
       link: this.newPlaceLink.trim(),
       lat: this.newPlaceLat,
       lon: this.newPlaceLon,
+      cost: this.newPlaceCost ?? null,
     };
     try {
       if (this.editingPlace?.id) {
@@ -564,6 +593,8 @@ export class ItineraryCountriesComponent implements OnInit {
     this.editName = this.itinerary?.name ?? '';
     this.editStartDate = this.itinerary?.startDate ?? '';
     this.editEndDate = this.itinerary?.endDate ?? '';
+    this.editBudget = this.itinerary?.budget ?? null;
+    this.editCurrency = this.itinerary?.currency ?? 'EUR';
     this.confirmDeleteItinerary = false;
     this.showSettingsPanel = true;
   }
@@ -586,6 +617,8 @@ export class ItineraryCountriesComponent implements OnInit {
         name: this.editName.trim(),
         startDate: this.editStartDate || undefined,
         endDate: this.editEndDate || undefined,
+        budget: this.editBudget ?? null,
+        currency: this.editCurrency || 'EUR',
       });
       this.itineraryName = this.editName.trim();
       this.closeSettingsPanel();
@@ -643,6 +676,7 @@ export class ItineraryCountriesComponent implements OnInit {
     this.newBookingLocationCity = booking?.locationCity ?? '';
     this.newBookingLocationLat = booking?.locationLat ?? null;
     this.newBookingLocationLon = booking?.locationLon ?? null;
+    this.newBookingCost = booking?.cost ?? null;
     this.showBookingForm = true;
   }
 
@@ -667,6 +701,7 @@ export class ItineraryCountriesComponent implements OnInit {
     this.newBookingLocationCity = '';
     this.newBookingLocationLat = null;
     this.newBookingLocationLon = null;
+    this.newBookingCost = null;
   }
 
   onHotelCityPicked(suggestion: import('../../../services/geo').PlaceSuggestion): void {
@@ -731,6 +766,7 @@ export class ItineraryCountriesComponent implements OnInit {
       reference: this.newBookingReference.trim() || undefined,
       link: this.newBookingLink.trim() || undefined,
       notes: this.newBookingNotes.trim() || undefined,
+      cost: this.newBookingCost ?? null,
     };
     try {
       if (this.editingBooking?.id) {

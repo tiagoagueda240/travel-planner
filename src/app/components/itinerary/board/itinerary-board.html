@@ -31,6 +31,98 @@
     <span class="progress-label">{{ progressPercent }}% — {{ progressDaysLabel }}</span>
   </div>
 
+  <!-- Budget strip -->
+  <div
+    class="budget-strip"
+    [class.budget-strip--warning]="budgetStatus === 'warning'"
+    [class.budget-strip--danger]="budgetStatus === 'danger'"
+    [class.budget-strip--expanded]="showBudgetPanel"
+    *ngIf="totalBudget > 0 || totalSpent > 0"
+    (click)="showBudgetPanel = !showBudgetPanel"
+  >
+    <div class="budget-strip-main">
+      <div class="budget-kpi">
+        <span class="budget-kpi-label">Orçamento</span>
+        <span class="budget-kpi-value"
+          >{{ currencySymbol }}{{ totalBudget | number: '1.0-0' }}</span
+        >
+      </div>
+      <div class="budget-bar-wrap">
+        <div class="budget-bar-track">
+          <div
+            class="budget-bar-fill"
+            [style.width.%]="budgetPercent"
+            [class.fill-ok]="budgetStatus === 'ok'"
+            [class.fill-warning]="budgetStatus === 'warning'"
+            [class.fill-danger]="budgetStatus === 'danger'"
+          ></div>
+        </div>
+        <span class="budget-bar-pct">{{ budgetPercent }}%</span>
+      </div>
+      <div class="budget-kpi">
+        <span class="budget-kpi-label">Gasto</span>
+        <span class="budget-kpi-value spent"
+          >{{ currencySymbol }}{{ totalSpent | number: '1.0-2' }}</span
+        >
+      </div>
+      <div class="budget-kpi" [class.kpi-remaining-danger]="remainingBudget < 0">
+        <span class="budget-kpi-label">Restante</span>
+        <span class="budget-kpi-value remaining" [class.negative]="remainingBudget < 0">
+          {{ remainingBudget >= 0 ? '' : '-' }}{{ currencySymbol
+          }}{{ (remainingBudget < 0 ? -remainingBudget : remainingBudget) | number: '1.0-2' }}
+        </span>
+      </div>
+      <button
+        class="budget-toggle-btn"
+        [class.rotated]="showBudgetPanel"
+        (click)="$event.stopPropagation(); showBudgetPanel = !showBudgetPanel"
+        title="Ver detalhes"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Breakdown panel -->
+    <div class="budget-breakdown" *ngIf="showBudgetPanel" (click)="$event.stopPropagation()">
+      <div
+        *ngFor="let cat of spentByCategory"
+        class="budget-cat"
+        [class.cat-zero]="cat.amount === 0"
+      >
+        <span class="cat-icon">{{ cat.icon }}</span>
+        <span class="cat-label">{{ cat.label }}</span>
+        <div class="cat-bar-outer">
+          <div
+            class="cat-bar-inner"
+            [style.width.%]="totalSpent > 0 ? (cat.amount / totalSpent) * 100 : 0"
+            [attr.data-type]="cat.type"
+          ></div>
+        </div>
+        <span class="cat-amount">
+          {{ cat.amount > 0 ? currencySymbol + (cat.amount | number: '1.0-2') : '—' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget CTA if no budget set -->
+  <div class="budget-cta" *ngIf="totalBudget === 0 && totalSpent === 0 && days.length > 0">
+    <span class="budget-cta-icon">💰</span>
+    <span class="budget-cta-text"
+      >Adiciona um orçamento nas <strong>Configurações ⚙️</strong> do itinerário para gerir os teus
+      gastos.</span
+    >
+  </div>
+
   <app-share-modal
     *ngIf="showShareModal && itinerary"
     [itinerary]="itinerary"
@@ -188,6 +280,10 @@
                   <span class="badge">{{ countPlaces(day.items) }}</span>
                 </div>
               </div>
+              <div class="day-cost-badge" *ngIf="dayCost(day) > 0">
+                <span class="day-cost-icon">💶</span>
+                <span>{{ currencySymbol }}{{ dayCost(day) | number: '1.0-2' }}</span>
+              </div>
 
               <!-- Bookings pinned to this day -->
               <div class="day-bookings" *ngIf="bookingsForDay(day).length > 0">
@@ -200,6 +296,9 @@
                   <span class="dbc-icon">{{ bookingIcon(booking.type) }}</span>
                   <span class="dbc-title">{{ booking.title }}</span>
                   <span class="dbc-time" *ngIf="booking.time">{{ booking.time }}</span>
+                  <span class="dbc-cost" *ngIf="booking.cost"
+                    >{{ currencySymbol }}{{ booking.cost | number: '1.0-2' }}</span
+                  >
                 </div>
               </div>
 

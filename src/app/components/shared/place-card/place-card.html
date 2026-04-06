@@ -11,6 +11,7 @@
     [class.has-image]="place.imageUrl"
   ></div>
   <span class="compact-name">{{ place.name }}</span>
+  <span class="compact-cost" *ngIf="place.cost">{{ place.cost | number: '1.0-0' }}</span>
   <div class="compact-actions">
     <ng-container *ngIf="showDelete && !confirmingDelete">
       <button (click)="onDelete()" class="btn-delete" title="Eliminar">🗑️</button>
@@ -53,6 +54,7 @@
         <button (click)="onDelete()" class="btn-delete" title="Eliminar">🗑️</button>
       </ng-container>
     </div>
+    <div class="card-cost-badge" *ngIf="place.cost">💶 {{ place.cost | number: '1.0-2' }}</div>
   </div>
 
   <!-- Full card confirm overlay -->

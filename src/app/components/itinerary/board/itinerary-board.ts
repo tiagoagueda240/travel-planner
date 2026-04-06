@@ -82,6 +82,7 @@ export class ItineraryBoardComponent implements OnInit, AfterViewInit {
   showShareModal = false;
   showMap = false;
   sidebarCollapsed = false;
+  showBudgetPanel = false;
 
   allPlaces: Place[] = [];
   countries: Country[] = [];
@@ -384,6 +385,97 @@ export class ItineraryBoardComponent implements OnInit, AfterViewInit {
 
   get unassignedCount(): number {
     return this.allPlaces.filter((p) => !p.assignedDay).length;
+  }
+
+  // ─── BUDGET ───
+  readonly currencyOptions = [
+    { code: 'EUR', symbol: '€' },
+    { code: 'USD', symbol: '$' },
+    { code: 'GBP', symbol: '£' },
+    { code: 'CHF', symbol: 'Fr' },
+    { code: 'JPY', symbol: '¥' },
+    { code: 'BRL', symbol: 'R$' },
+    { code: 'CAD', symbol: 'C$' },
+    { code: 'AUD', symbol: 'A$' },
+    { code: 'SEK', symbol: 'kr' },
+    { code: 'NOK', symbol: 'kr' },
+    { code: 'DKK', symbol: 'kr' },
+    { code: 'PLN', symbol: 'zł' },
+    { code: 'CZK', symbol: 'Kč' },
+    { code: 'AED', symbol: 'د.إ' },
+  ];
+
+  get currencySymbol(): string {
+    const code = this.itinerary?.currency ?? 'EUR';
+    return this.currencyOptions.find((c) => c.code === code)?.symbol ?? '€';
+  }
+
+  get totalBudget(): number {
+    return this.itinerary?.budget ?? 0;
+  }
+
+  get totalSpentPlaces(): number {
+    return this.allPlaces.reduce((sum, p) => sum + (p.cost ?? 0), 0);
+  }
+
+  get totalSpentBookings(): number {
+    return this.bookings.reduce((sum, b) => sum + (b.cost ?? 0), 0);
+  }
+
+  get totalSpent(): number {
+    return this.totalSpentPlaces + this.totalSpentBookings;
+  }
+
+  get remainingBudget(): number {
+    return this.totalBudget - this.totalSpent;
+  }
+
+  get budgetPercent(): number {
+    if (this.totalBudget <= 0) return 0;
+    return Math.min(100, Math.round((this.totalSpent / this.totalBudget) * 100));
+  }
+
+  get budgetStatus(): 'ok' | 'warning' | 'danger' {
+    if (this.totalBudget <= 0) return 'ok';
+    const pct = this.budgetPercent;
+    if (pct >= 100) return 'danger';
+    if (pct >= 80) return 'warning';
+    return 'ok';
+  }
+
+  get spentByCategory(): { label: string; icon: string; amount: number; type: string }[] {
+    const flights = this.bookings
+      .filter((b) => b.type === 'flight')
+      .reduce((s, b) => s + (b.cost ?? 0), 0);
+    const hotels = this.bookings
+      .filter((b) => b.type === 'hotel')
+      .reduce((s, b) => s + (b.cost ?? 0), 0);
+    const transport = this.bookings
+      .filter((b) => b.type === 'bus')
+      .reduce((s, b) => s + (b.cost ?? 0), 0);
+    const other = this.bookings
+      .filter((b) => b.type === 'other')
+      .reduce((s, b) => s + (b.cost ?? 0), 0);
+    return [
+      { label: 'Voos', icon: '✈️', amount: flights, type: 'flight' },
+      { label: 'Alojamento', icon: '🏨', amount: hotels, type: 'hotel' },
+      { label: 'Atividades', icon: '🎫', amount: this.totalSpentPlaces, type: 'place' },
+      { label: 'Transportes', icon: '🚌', amount: transport, type: 'bus' },
+      { label: 'Outros', icon: '📦', amount: other, type: 'other' },
+    ];
+  }
+
+  dayCost(day: { items: DayItem[]; dateStr: string }): number {
+    const placesCost = day.items
+      .filter((i) => i.type === 'place')
+      .reduce((s, i) => s + ((i.data as Place).cost ?? 0), 0);
+    const bookingsCost = this.bookingsForDay(day).reduce((s, b) => s + (b.cost ?? 0), 0);
+    return placesCost + bookingsCost;
+  }
+
+  formatCost(amount: number): string {
+    if (amount === 0) return '';
+    return `${this.currencySymbol}${amount.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   }
 
   get progressPercent(): number {
