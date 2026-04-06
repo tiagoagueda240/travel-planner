@@ -35,8 +35,9 @@ export class PlaceCardComponent {
 
   get cardImageStyle(): SafeStyle {
     const url = this.place.imageUrl;
-    if (url && /^https?:\/\//i.test(url)) {
-      return this.sanitizer.bypassSecurityTrustStyle(`url(${url})`);
+    // Strict whitelist: only https, no whitespace or CSS special characters
+    if (url && /^https:\/\/[^\s"'()\\]+$/.test(url)) {
+      return this.sanitizer.bypassSecurityTrustStyle(`url("${url}")`);
     }
     return '';
   }

@@ -1,0 +1,158 @@
+.dp-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.dp-capsule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 11px 14px;
+  cursor: pointer;
+  background: white;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  &:hover {
+    background: #f8fafc;
+  }
+
+  &.open {
+    border-color: #111827;
+    border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+  }
+}
+
+.dp-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #111827;
+  pointer-events: none;
+}
+
+.dp-icon {
+  width: 15px;
+  height: 15px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.dp-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 260px;
+  z-index: 200;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  animation: dpPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dpPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+
+  strong {
+    flex: 1;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #111827;
+    text-transform: capitalize;
+  }
+}
+
+.dp-nav {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: #6b7280;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+}
+
+.dp-close {
+  font-size: 1.3rem;
+  margin-left: 4px;
+}
+
+.dp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 2px;
+}
+
+.dp-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  .dp-day-num {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: background 0.15s;
+  }
+
+  &.other-month {
+    opacity: 0.3;
+  }
+
+  &:hover:not(.selected) .dp-day-num {
+    background: #f3f4f6;
+  }
+
+  &.selected .dp-day-num {
+    background: #111827;
+    color: white;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  }
+}

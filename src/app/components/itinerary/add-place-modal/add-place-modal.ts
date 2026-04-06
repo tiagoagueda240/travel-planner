@@ -1,9 +1,30 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Place } from '../../../models/models';
 import { ImagePickerComponent } from '../../shared/image-picker/image-picker';
+
+function urlOrEmptyValidator(control: AbstractControl): ValidationErrors | null {
+  const val: string = control.value ?? '';
+  if (!val.trim()) return null; // empty is allowed
+  try {
+    const url = new URL(val);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return { invalidUrl: true };
+    }
+    return null;
+  } catch {
+    return { invalidUrl: true };
+  }
+}
 
 @Component({
   selector: 'app-add-place-modal',
@@ -28,7 +49,7 @@ export class AddPlaceModalComponent implements OnInit {
       cityId: [this.data.place?.cityId ?? this.data.cityId],
       name: [this.data.place?.name ?? '', [Validators.required, Validators.minLength(2)]],
       imageUrl: [this.data.place?.imageUrl ?? ''],
-      link: [this.data.place?.link ?? ''],
+      link: [this.data.place?.link ?? '', [urlOrEmptyValidator]],
       assignedDay: [this.data.place?.assignedDay ?? null],
       orderIndex: [this.data.place?.orderIndex ?? 0],
     });

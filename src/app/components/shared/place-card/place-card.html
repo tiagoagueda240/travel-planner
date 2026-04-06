@@ -20,7 +20,14 @@
       <button (click)="onDelete()" class="btn-confirm-delete" title="Confirmar">✓</button>
     </ng-container>
     <ng-container *ngIf="!showDelete">
-      <button (click)="unassign.emit(place)" class="btn-unassign" title="Remover do dia">↩</button>
+      <button
+        *ngIf="place.assignedDay"
+        (click)="unassign.emit(place)"
+        class="btn-unassign"
+        title="Remover do dia"
+      >
+        ↩
+      </button>
     </ng-container>
   </div>
 

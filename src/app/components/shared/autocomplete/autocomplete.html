@@ -21,7 +21,10 @@
     >
       {{ item }}
     </li>
-    <li *ngIf="mode === 'place'" class="ac-footer">
+    <li
+      *ngIf="mode === 'place' || mode === 'location' || mode === 'airport' || mode === 'hotel'"
+      class="ac-footer"
+    >
       Via <a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a>
     </li>
   </ul>

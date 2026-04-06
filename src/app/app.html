@@ -1,1 +1,15 @@
-<router-outlet></router-outlet> <app-toast></app-toast>
+<router-outlet></router-outlet>
+<app-toast></app-toast>
+<app-confirm-dialog></app-confirm-dialog>
+
+<button
+  *ngIf="dirty.isDirty$ | async"
+  class="float-save-btn"
+  [disabled]="dirty.isSaving$ | async"
+  (click)="dirty.save()"
+>
+  <span class="float-save-icon">💾</span>
+  <span class="float-save-label">
+    {{ (dirty.isSaving$ | async) ? 'A guardar...' : 'Guardar' }}
+  </span>
+</button>

@@ -1,0 +1,51 @@
+<div class="tp-wrapper">
+  <div class="tp-capsule" [class.open]="showPanel" (click)="openPanel()">
+    <span class="tp-value">{{ displayValue }}</span>
+    <svg class="tp-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
+      <path
+        d="M8 5v3.5l2 2"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </div>
+
+  <div class="tp-popup" *ngIf="showPanel">
+    <div class="tp-popup-header">
+      <span class="tp-popup-title">Hora</span>
+      <button class="tp-close" (click)="closePanel($event)">×</button>
+    </div>
+    <div class="tp-columns">
+      <div class="tp-column">
+        <div class="tp-col-label">HH</div>
+        <div class="tp-scroll">
+          <div
+            *ngFor="let h of hours"
+            class="tp-item"
+            [class.active]="h === selectedHourStr"
+            (click)="selectHour(h, $event)"
+          >
+            {{ h }}
+          </div>
+        </div>
+      </div>
+      <div class="tp-sep">:</div>
+      <div class="tp-column">
+        <div class="tp-col-label">MM</div>
+        <div class="tp-scroll">
+          <div
+            *ngFor="let m of minutes"
+            class="tp-item"
+            [class.active]="m === selectedMinuteStr"
+            (click)="selectMinute(m, $event)"
+          >
+            {{ m }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

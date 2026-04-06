@@ -1,0 +1,29 @@
+@if (dialog.state$ | async; as state) {
+  @if (state.visible) {
+    <div class="dialog-backdrop" (click)="dialog.resolve('cancel')">
+      <div class="dialog-panel" (click)="$event.stopPropagation()">
+        <div class="dialog-icon-wrap">💾</div>
+        <h3 class="dialog-title">{{ state.title }}</h3>
+        <p class="dialog-message">{{ state.message }}</p>
+        <div class="dialog-actions">
+          <button class="dialog-btn dialog-btn--cancel" (click)="dialog.resolve('cancel')">
+            {{ state.cancelLabel }}
+          </button>
+          @if (state.secondaryLabel) {
+            <button class="dialog-btn dialog-btn--secondary" (click)="dialog.resolve('secondary')">
+              {{ state.secondaryLabel }}
+            </button>
+          }
+          <button
+            class="dialog-btn"
+            [class.dialog-btn--confirm]="!state.confirmDanger"
+            [class.dialog-btn--danger]="state.confirmDanger"
+            (click)="dialog.resolve('confirm')"
+          >
+            {{ state.confirmLabel }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}

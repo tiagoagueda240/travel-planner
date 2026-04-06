@@ -4,9 +4,93 @@
     <a routerLink="/" class="back-link">← Itinerários</a>
     <span class="divider"></span>
     <h1>{{ itineraryName }}</h1>
+
+    <nav class="hub-tabs">
+      <button
+        class="hub-tab"
+        [class.active]="activeTab === 'destinos'"
+        (click)="activeTab = 'destinos'"
+      >
+        🗺️ Destinos
+      </button>
+      <button
+        class="hub-tab"
+        [class.active]="activeTab === 'reservas'"
+        (click)="activeTab = 'reservas'"
+      >
+        🗂️ Reservas
+        <span class="hub-tab-badge" *ngIf="bookings.length > 0">{{ bookings.length }}</span>
+      </button>
+    </nav>
+
     <button class="btn-share" (click)="showShareModal = true">🔗 Partilhar</button>
-    <button class="btn-plan" (click)="goToPlanning()" *ngIf="activeCity">🗓 Planear Dias</button>
+    <button
+      class="btn-settings"
+      (click)="openSettingsPanel()"
+      *ngIf="isOwner"
+      title="Configurações"
+    >
+      ⚙️
+    </button>
+    <button class="btn-plan" (click)="goToPlanning()">🗓 Planear Dias</button>
   </header>
+
+  <!-- Settings panel -->
+  <div class="settings-overlay" *ngIf="showSettingsPanel" (click)="closeSettingsPanel()"></div>
+  <aside class="settings-panel" *ngIf="showSettingsPanel">
+    <div class="settings-header">
+      <h3>Configurações</h3>
+      <button class="settings-close" (click)="closeSettingsPanel()">✕</button>
+    </div>
+
+    <div class="settings-body">
+      <div class="field-group">
+        <label>Nome do itinerário *</label>
+        <input type="text" [(ngModel)]="editName" placeholder="Ex: Eurotrip 2025" />
+      </div>
+
+      <div class="field-group">
+        <label>Datas</label>
+        <app-date-range-picker
+          [startDate]="editStartDate"
+          [endDate]="editEndDate"
+          (rangeChange)="onSettingsRangeChange($event)"
+        ></app-date-range-picker>
+      </div>
+
+      <div class="settings-actions">
+        <button
+          class="btn-settings-save"
+          (click)="saveSettings()"
+          [disabled]="editName.trim().length < 2 || savingSettings"
+        >
+          {{ savingSettings ? 'A guardar...' : 'Guardar' }}
+        </button>
+        <button class="btn-settings-cancel" (click)="closeSettingsPanel()">Cancelar</button>
+      </div>
+
+      <div class="settings-danger-zone" *ngIf="!confirmDeleteItinerary">
+        <button class="btn-danger" (click)="confirmDeleteItinerary = true">
+          🗑️ Eliminar itinerário
+        </button>
+      </div>
+
+      <div class="settings-confirm-delete" *ngIf="confirmDeleteItinerary">
+        <p>
+          Tens a certeza? Esta ação é <strong>irreversível</strong> e elimina todos os países,
+          cidades, locais e reservas.
+        </p>
+        <div class="confirm-delete-actions">
+          <button class="btn-confirm-danger" (click)="confirmDeleteItineraryFn()">
+            Eliminar tudo
+          </button>
+          <button class="btn-settings-cancel" (click)="confirmDeleteItinerary = false">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <app-share-modal
     *ngIf="showShareModal && itinerary"
@@ -16,306 +100,659 @@
   ></app-share-modal>
 
   <div class="hub-body">
-    <!-- ── PAÍSES ── -->
-    <section class="hub-section">
-      <div class="hub-section-header">
-        <div class="section-label">
-          <span class="label-tag">Destinos</span>
-          <h2>Pa&iacute;ses</h2>
-        </div>
-        <button
-          class="btn-add"
-          [class.cancel]="showAddCountryForm"
-          (click)="toggleAddCountryForm()"
-        >
-          {{ showAddCountryForm ? '✕ Cancelar' : '+ Pa&iacute;s' }}
-        </button>
-      </div>
-
-      <div class="inline-form" *ngIf="showAddCountryForm">
-        <app-autocomplete
-          mode="country"
-          [(value)]="newCountryName"
-          placeholder="Ex: T&uuml;rkiye, Jap&atilde;o, Portugal..."
-          (selected)="createCountry()"
-        ></app-autocomplete>
-        <app-image-picker
-          [(value)]="newCountryImageUrl"
-          [hint]="newCountryName"
-          [disabled]="newCountryName.trim().length < 2"
-        ></app-image-picker>
-        <button
-          class="btn-confirm"
-          (click)="createCountry()"
-          [disabled]="newCountryName.length < 2"
-        >
-          Criar
-        </button>
-      </div>
-
-      <div class="chips-row" *ngIf="countries.length > 0">
-        <button
-          *ngFor="let country of countries"
-          class="chip"
-          [class.active]="activeCountry?.id === country.id"
-          (click)="selectCountry(country)"
-        >
-          <span
-            *ngIf="country.imageUrl"
-            class="chip-thumb"
-            [style.background-image]="'url(' + country.imageUrl + ')'"
-          ></span>
-          <span *ngIf="!country.imageUrl" class="chip-dot"></span>
-          <span class="chip-name">{{ country.name }}</span>
-          <div
-            *ngIf="activeCountry?.id === country.id"
-            class="chip-actions"
-            (click)="$event.stopPropagation()"
-          >
-            <button class="chip-menu-btn">⋯</button>
-            <div class="chip-dropdown">
-              <button class="chip-dropdown-item" (click)="openEditCountryForm(country)">
-                ✏️ Editar
-              </button>
-              <button
-                class="chip-dropdown-item danger"
-                (click)="editingCountry = country; confirmDeleteCountry = true"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
+    <!-- ══ DESTINOS TAB ══ -->
+    <ng-container *ngIf="activeTab === 'destinos'">
+      <!-- ── PAÍSES ── -->
+      <section class="hub-section">
+        <div class="hub-section-header">
+          <div class="section-label">
+            <span class="label-tag">Destinos</span>
+            <h2>Pa&iacute;ses</h2>
           </div>
-        </button>
-      </div>
-
-      <!-- Edit country form -->
-      <div class="inline-form" *ngIf="editingCountry && !confirmDeleteCountry">
-        <app-autocomplete
-          mode="country"
-          [(value)]="editCountryName"
-          placeholder="Nome do país"
-        ></app-autocomplete>
-        <app-image-picker
-          [(value)]="editCountryImageUrl"
-          [hint]="editCountryName"
-          [disabled]="editCountryName.trim().length < 2"
-        ></app-image-picker>
-        <button class="btn-add cancel" (click)="closeEditCountryForm()">Cancelar</button>
-        <button class="btn-delete-item" (click)="confirmDeleteCountry = true" title="Eliminar país">
-          🗑️
-        </button>
-        <button
-          class="btn-confirm"
-          (click)="saveCountry()"
-          [disabled]="editCountryName.trim().length < 2"
-        >
-          Guardar
-        </button>
-      </div>
-
-      <!-- Confirm delete country -->
-      <div class="delete-confirm-bar" *ngIf="activeCountry && confirmDeleteCountry">
-        <span
-          >Eliminar <strong>{{ activeCountry.name }}</strong> e todas as cidades e locais? Esta ação
-          é irreversível.</span
-        >
-        <button class="btn-confirm-delete-item" (click)="confirmAndDeleteCountry()">
-          Eliminar tudo
-        </button>
-        <button
-          class="btn-add cancel"
-          (click)="confirmDeleteCountry = false; editingCountry = null"
-        >
-          Cancelar
-        </button>
-      </div>
-      <p class="empty-hint" *ngIf="countries.length === 0 && !showAddCountryForm">
-        Nenhum pa&iacute;s adicionado. Clica em "+ Pa&iacute;s" para come&ccedil;ar.
-      </p>
-    </section>
-
-    <!-- ── CIDADES ── -->
-    <section class="hub-section slide-in" *ngIf="activeCountry">
-      <div class="hub-section-header">
-        <div class="section-label">
-          <span class="label-tag">{{ activeCountry.name }}</span>
-          <h2>Cidades</h2>
-        </div>
-        <button class="btn-add" [class.cancel]="showAddCityForm" (click)="toggleAddCityForm()">
-          {{ showAddCityForm ? '✕ Cancelar' : '+ Cidade' }}
-        </button>
-      </div>
-
-      <div class="inline-form" *ngIf="showAddCityForm">
-        <app-autocomplete
-          mode="city"
-          [countryContext]="activeCountry?.name || ''"
-          [(value)]="newCityName"
-          placeholder="Ex: Istambul, Tóquio, Roma..."
-          (selected)="createCity()"
-        ></app-autocomplete>
-        <app-image-picker
-          [(value)]="newCityImageUrl"
-          [hint]="newCityName"
-          [disabled]="newCityName.trim().length < 2"
-        ></app-image-picker>
-        <button class="btn-confirm" (click)="createCity()" [disabled]="newCityName.length < 2">
-          Criar
-        </button>
-      </div>
-
-      <div class="chips-row" *ngIf="cities.length > 0">
-        <button
-          *ngFor="let city of cities"
-          class="chip"
-          [class.active]="activeCity?.id === city.id"
-          (click)="selectCity(city)"
-        >
-          <span
-            *ngIf="city.imageUrl"
-            class="chip-thumb"
-            [style.background-image]="'url(' + city.imageUrl + ')'"
-          ></span>
-          <span *ngIf="!city.imageUrl" class="chip-dot"></span>
-          <span class="chip-name">{{ city.name }}</span>
-          <div
-            *ngIf="activeCity?.id === city.id"
-            class="chip-actions"
-            (click)="$event.stopPropagation()"
-          >
-            <button class="chip-menu-btn">⋯</button>
-            <div class="chip-dropdown">
-              <button class="chip-dropdown-item" (click)="openEditCityForm(city)">✏️ Editar</button>
-              <button
-                class="chip-dropdown-item danger"
-                (click)="editingCity = city; confirmDeleteCity = true"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      <!-- Edit city form -->
-      <div class="inline-form" *ngIf="editingCity && !confirmDeleteCity">
-        <app-autocomplete
-          mode="city"
-          [countryContext]="activeCountry?.name || ''"
-          [(value)]="editCityName"
-          placeholder="Nome da cidade"
-        ></app-autocomplete>
-        <app-image-picker
-          [(value)]="editCityImageUrl"
-          [hint]="editCityName"
-          [disabled]="editCityName.trim().length < 2"
-        ></app-image-picker>
-        <button class="btn-add cancel" (click)="closeEditCityForm()">Cancelar</button>
-        <button class="btn-delete-item" (click)="confirmDeleteCity = true" title="Eliminar cidade">
-          🗑️
-        </button>
-        <button
-          class="btn-confirm"
-          (click)="saveCity()"
-          [disabled]="editCityName.trim().length < 2"
-        >
-          Guardar
-        </button>
-      </div>
-
-      <!-- Confirm delete city -->
-      <div class="delete-confirm-bar" *ngIf="activeCity && confirmDeleteCity">
-        <span
-          >Eliminar <strong>{{ activeCity.name }}</strong> e todos os locais? Esta ação é
-          irreversível.</span
-        >
-        <button class="btn-confirm-delete-item" (click)="confirmAndDeleteCity()">
-          Eliminar tudo
-        </button>
-        <button class="btn-add cancel" (click)="confirmDeleteCity = false; editingCity = null">
-          Cancelar
-        </button>
-      </div>
-      <p class="empty-hint" *ngIf="cities.length === 0 && !showAddCityForm">
-        Nenhuma cidade adicionada. Clica em "+ Cidade".
-      </p>
-    </section>
-
-    <!-- ── SÍTIOS ── -->
-    <section class="hub-section slide-in" *ngIf="activeCity">
-      <div class="hub-section-header">
-        <div class="section-label">
-          <span class="label-tag">{{ activeCity.name }}</span>
-          <h2>Locais a visitar</h2>
-        </div>
-        <div class="header-actions">
           <button
-            class="btn-toggle-map"
-            [class.active]="showMap"
-            (click)="showMap = !showMap"
-            *ngIf="places.length > 0"
+            class="btn-add"
+            [class.cancel]="showAddCountryForm"
+            (click)="toggleAddCountryForm()"
           >
-            {{ showMap ? '☰ Lista' : '🗺️ Mapa' }}
-          </button>
-          <button class="btn-add secondary" (click)="openPlaceForm()" *ngIf="!showPlaceForm">
-            + Local
+            {{ showAddCountryForm ? '✕ Cancelar' : '+ Pa&iacute;s' }}
           </button>
         </div>
-      </div>
 
-      <!-- Add / Edit form -->
-      <div class="place-form-panel" *ngIf="showPlaceForm">
-        <p class="form-title">{{ editingPlace ? 'Editar local' : 'Novo local' }}</p>
-        <div class="place-form-fields">
-          <div class="field-group">
-            <label>Nome *</label>
-            <app-autocomplete
-              mode="place"
-              [(value)]="newPlaceName"
-              placeholder="Ex: Torre de Belém, Haghia Sophia..."
-              (placePicked)="onPlacePicked($event)"
-            ></app-autocomplete>
+        <div class="inline-form" *ngIf="showAddCountryForm">
+          <app-autocomplete
+            mode="country"
+            [(value)]="newCountryName"
+            placeholder="Ex: T&uuml;rkiye, Jap&atilde;o, Portugal..."
+            (selected)="createCountry()"
+          ></app-autocomplete>
+          <app-image-picker
+            [(value)]="newCountryImageUrl"
+            [hint]="newCountryName"
+            [disabled]="newCountryName.trim().length < 2"
+          ></app-image-picker>
+          <button
+            class="btn-confirm"
+            (click)="createCountry()"
+            [disabled]="newCountryName.length < 2"
+          >
+            Criar
+          </button>
+        </div>
+
+        <div
+          class="chips-row"
+          *ngIf="countries.length > 0"
+          cdkDropList
+          cdkDropListOrientation="horizontal"
+          [cdkDropListData]="countries"
+          (cdkDropListDropped)="reorderCountries($event)"
+        >
+          <button
+            *ngFor="let country of countries"
+            class="chip"
+            [class.active]="activeCountry?.id === country.id"
+            (click)="selectCountry(country)"
+            cdkDrag
+            [cdkDragData]="country"
+          >
+            <div class="chip-card">
+              <span
+                *ngIf="country.imageUrl"
+                class="chip-thumb"
+                [style.background-image]="'url(' + country.imageUrl + ')'"
+              ></span>
+              <span *ngIf="!country.imageUrl" class="chip-dot"></span>
+              <span class="chip-name">{{ country.name }}</span>
+            </div>
+            <span class="chip-badge" *ngIf="citiesCountByCountry[country.id!]">
+              {{ citiesCountByCountry[country.id!] }}
+              {{ citiesCountByCountry[country.id!] === 1 ? 'cidade' : 'cidades' }}
+            </span>
+            <div class="chip-drag-handle" cdkDragHandle title="Arrastar para reordenar">⠿</div>
+            <div
+              *ngIf="activeCountry?.id === country.id"
+              class="chip-actions"
+              (click)="$event.stopPropagation()"
+            >
+              <button class="chip-menu-btn">⋯</button>
+              <div class="chip-dropdown">
+                <button class="chip-dropdown-item" (click)="openEditCountryForm(country)">
+                  ✏️ Editar
+                </button>
+                <button
+                  class="chip-dropdown-item danger"
+                  (click)="editingCountry = country; confirmDeleteCountry = true"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Edit country form -->
+        <div class="inline-form" *ngIf="editingCountry && !confirmDeleteCountry">
+          <app-autocomplete
+            mode="country"
+            [(value)]="editCountryName"
+            placeholder="Nome do país"
+          ></app-autocomplete>
+          <app-image-picker
+            [(value)]="editCountryImageUrl"
+            [hint]="editCountryName"
+            [disabled]="editCountryName.trim().length < 2"
+          ></app-image-picker>
+          <button class="btn-add cancel" (click)="closeEditCountryForm()">Cancelar</button>
+          <button
+            class="btn-delete-item"
+            (click)="confirmDeleteCountry = true"
+            title="Eliminar país"
+          >
+            🗑️
+          </button>
+          <button
+            class="btn-confirm"
+            (click)="saveCountry()"
+            [disabled]="editCountryName.trim().length < 2"
+          >
+            Guardar
+          </button>
+        </div>
+
+        <!-- Confirm delete country -->
+        <div class="delete-confirm-bar" *ngIf="activeCountry && confirmDeleteCountry">
+          <span
+            >Eliminar <strong>{{ activeCountry.name }}</strong> e todas as cidades e locais? Esta
+            ação é irreversível.</span
+          >
+          <button class="btn-confirm-delete-item" (click)="confirmAndDeleteCountry()">
+            Eliminar tudo
+          </button>
+          <button
+            class="btn-add cancel"
+            (click)="confirmDeleteCountry = false; editingCountry = null"
+          >
+            Cancelar
+          </button>
+        </div>
+        <div class="empty-state" *ngIf="countries.length === 0 && !showAddCountryForm">
+          <span class="empty-state-icon">🌍</span>
+          <p class="empty-state-title">Ainda sem destinos</p>
+          <p class="empty-state-sub">
+            Clica em "+ Pa&iacute;s" para come&ccedil;ares a planear a tua viagem.
+          </p>
+        </div>
+      </section>
+
+      <!-- ── CIDADES ── -->
+      <section class="hub-section slide-in" *ngIf="activeCountry">
+        <div class="hub-section-header">
+          <div class="section-label">
+            <span class="label-tag">{{ activeCountry.name }}</span>
+            <h2>Cidades</h2>
           </div>
-          <div class="field-group">
-            <label>Imagem</label>
-            <app-image-picker
-              [(value)]="newPlaceImageUrl"
-              [hint]="(activeCity?.name || '') + (newPlaceName ? ' - ' + newPlaceName : '')"
+          <button class="btn-add" [class.cancel]="showAddCityForm" (click)="toggleAddCityForm()">
+            {{ showAddCityForm ? '✕ Cancelar' : '+ Cidade' }}
+          </button>
+        </div>
+
+        <div class="inline-form" *ngIf="showAddCityForm">
+          <app-autocomplete
+            mode="city"
+            [countryContext]="activeCountry.name"
+            [(value)]="newCityName"
+            placeholder="Ex: Istambul, Tóquio, Roma..."
+            (selected)="createCity()"
+          ></app-autocomplete>
+          <app-image-picker
+            [(value)]="newCityImageUrl"
+            [hint]="newCityName"
+            [disabled]="newCityName.trim().length < 2"
+          ></app-image-picker>
+          <button class="btn-confirm" (click)="createCity()" [disabled]="newCityName.length < 2">
+            Criar
+          </button>
+        </div>
+
+        <div
+          class="chips-row"
+          *ngIf="cities.length > 0"
+          cdkDropList
+          cdkDropListOrientation="horizontal"
+          [cdkDropListData]="cities"
+          (cdkDropListDropped)="reorderCities($event)"
+        >
+          <button
+            *ngFor="let city of cities"
+            class="chip"
+            [class.active]="activeCity?.id === city.id"
+            (click)="selectCity(city)"
+            cdkDrag
+            [cdkDragData]="city"
+          >
+            <div class="chip-card">
+              <span
+                *ngIf="city.imageUrl"
+                class="chip-thumb"
+                [style.background-image]="'url(' + city.imageUrl + ')'"
+              ></span>
+              <span *ngIf="!city.imageUrl" class="chip-dot"></span>
+              <span class="chip-name">{{ city.name }}</span>
+            </div>
+            <span class="chip-badge" *ngIf="placesCountByCity[city.id!]">
+              {{ placesCountByCity[city.id!] }}
+              {{ placesCountByCity[city.id!] === 1 ? 'local' : 'locais' }}
+            </span>
+            <div class="chip-drag-handle" cdkDragHandle title="Arrastar para reordenar">⠿</div>
+            <div
+              *ngIf="activeCity?.id === city.id"
+              class="chip-actions"
+              (click)="$event.stopPropagation()"
+            >
+              <button class="chip-menu-btn">⋯</button>
+              <div class="chip-dropdown">
+                <button class="chip-dropdown-item" (click)="openEditCityForm(city)">
+                  ✏️ Editar
+                </button>
+                <button
+                  class="chip-dropdown-item danger"
+                  (click)="editingCity = city; confirmDeleteCity = true"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Edit city form -->
+        <div class="inline-form" *ngIf="editingCity && !confirmDeleteCity">
+          <app-autocomplete
+            mode="city"
+            [countryContext]="activeCountry.name"
+            [(value)]="editCityName"
+            placeholder="Nome da cidade"
+          ></app-autocomplete>
+          <app-image-picker
+            [(value)]="editCityImageUrl"
+            [hint]="editCityName"
+            [disabled]="editCityName.trim().length < 2"
+          ></app-image-picker>
+          <button class="btn-add cancel" (click)="closeEditCityForm()">Cancelar</button>
+          <button
+            class="btn-delete-item"
+            (click)="confirmDeleteCity = true"
+            title="Eliminar cidade"
+          >
+            🗑️
+          </button>
+          <button
+            class="btn-confirm"
+            (click)="saveCity()"
+            [disabled]="editCityName.trim().length < 2"
+          >
+            Guardar
+          </button>
+        </div>
+
+        <!-- Confirm delete city -->
+        <div class="delete-confirm-bar" *ngIf="activeCity && confirmDeleteCity">
+          <span
+            >Eliminar <strong>{{ activeCity.name }}</strong> e todos os locais? Esta ação é
+            irreversível.</span
+          >
+          <button class="btn-confirm-delete-item" (click)="confirmAndDeleteCity()">
+            Eliminar tudo
+          </button>
+          <button class="btn-add cancel" (click)="confirmDeleteCity = false; editingCity = null">
+            Cancelar
+          </button>
+        </div>
+        <div class="empty-state" *ngIf="cities.length === 0 && !showAddCityForm">
+          <span class="empty-state-icon">🏙️</span>
+          <p class="empty-state-title">Ainda sem cidades</p>
+          <p class="empty-state-sub">
+            Clica em "+ Cidade" para adicionar o primeiro destino em {{ activeCountry.name }}.
+          </p>
+        </div>
+
+        <!-- City notes -->
+        <div class="city-notes" *ngIf="activeCity && !editingCity && !confirmDeleteCity">
+          <label class="city-notes-label">📝 Notas — {{ activeCity.name }}</label>
+          <textarea
+            class="city-notes-textarea"
+            [(ngModel)]="cityNotes"
+            (blur)="saveCityNotes()"
+            placeholder="Dicas, apontamentos ou lembretes sobre esta cidade..."
+            rows="3"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- ── SÍTIOS ── -->
+      <section class="hub-section slide-in" *ngIf="activeCity">
+        <div class="hub-section-header">
+          <div class="section-label">
+            <span class="label-tag">{{ activeCity.name }}</span>
+            <h2>Locais a visitar</h2>
+          </div>
+          <div class="header-actions">
+            <button
+              class="btn-toggle-map"
+              [class.active]="showMap"
+              (click)="showMap = !showMap"
+              *ngIf="places.length > 0"
+            >
+              {{ showMap ? '☰ Lista' : '🗺️ Mapa' }}
+            </button>
+            <button class="btn-add secondary" (click)="openPlaceForm()" *ngIf="!showPlaceForm">
+              + Local
+            </button>
+          </div>
+        </div>
+
+        <!-- Add / Edit form -->
+        <div class="place-form-panel" *ngIf="showPlaceForm">
+          <p class="form-title">{{ editingPlace ? 'Editar local' : 'Novo local' }}</p>
+          <div class="place-form-fields">
+            <div class="field-group">
+              <label>Nome *</label>
+              <app-autocomplete
+                mode="place"
+                [(value)]="newPlaceName"
+                placeholder="Ex: Torre de Belém, Haghia Sophia..."
+                (placePicked)="onPlacePicked($event)"
+              ></app-autocomplete>
+            </div>
+            <div class="field-group">
+              <label>Imagem</label>
+              <app-image-picker
+                [(value)]="newPlaceImageUrl"
+                [hint]="activeCity.name + (newPlaceName ? ' - ' + newPlaceName : '')"
+                [disabled]="newPlaceName.trim().length < 2"
+              ></app-image-picker>
+            </div>
+            <div class="field-group">
+              <label>Link &uacute;til</label>
+              <input type="text" [(ngModel)]="newPlaceLink" placeholder="https://..." />
+            </div>
+          </div>
+          <div class="place-form-actions">
+            <button class="btn-add cancel" (click)="closePlaceForm()">Cancelar</button>
+            <button
+              class="btn-add"
+              (click)="savePlace()"
               [disabled]="newPlaceName.trim().length < 2"
-            ></app-image-picker>
-          </div>
-          <div class="field-group">
-            <label>Link &uacute;til</label>
-            <input type="text" [(ngModel)]="newPlaceLink" placeholder="https://..." />
+            >
+              {{ editingPlace ? 'Guardar' : 'Adicionar' }}
+            </button>
           </div>
         </div>
-        <div class="place-form-actions">
-          <button class="btn-add cancel" (click)="closePlaceForm()">Cancelar</button>
-          <button class="btn-add" (click)="savePlace()" [disabled]="newPlaceName.trim().length < 2">
-            {{ editingPlace ? 'Guardar' : 'Adicionar' }}
+
+        <!-- Map view -->
+        <div class="map-container" *ngIf="showMap">
+          <app-map-view [places]="mapPlaces" [visible]="showMap"></app-map-view>
+        </div>
+
+        <!-- Places grid -->
+        <div class="places-grid" *ngIf="!showMap">
+          <app-place-card
+            *ngFor="let place of places"
+            [place]="place"
+            (edit)="openPlaceForm($event)"
+            (delete)="deletePlace($event)"
+          ></app-place-card>
+
+          <div class="empty-hint centered" *ngIf="places.length === 0 && !showPlaceForm">
+            <span class="empty-icon">📍</span>
+            <p>Ainda sem locais. Clica em "+ Local" para adicionar.</p>
+          </div>
+        </div>
+      </section> </ng-container
+    ><!-- /destinos tab -->
+
+    <!-- ══ RESERVAS TAB ══ -->
+    <ng-container *ngIf="activeTab === 'reservas'">
+      <section class="hub-section slide-in">
+        <div class="hub-section-header">
+          <div class="section-label">
+            <span class="label-tag">Logística</span>
+            <h2>Reservas</h2>
+          </div>
+          <button class="btn-add secondary" (click)="openBookingForm()" *ngIf="!showBookingForm">
+            + Reserva
           </button>
         </div>
-      </div>
 
-      <!-- Map view -->
-      <div class="map-container" *ngIf="showMap">
-        <app-map-view [places]="places" [visible]="showMap"></app-map-view>
-      </div>
-
-      <!-- Places grid -->
-      <div class="places-grid" *ngIf="!showMap">
-        <app-place-card
-          *ngFor="let place of places"
-          [place]="place"
-          (edit)="openPlaceForm($event)"
-          (delete)="deletePlace($event)"
-        ></app-place-card>
-
-        <div class="empty-hint centered" *ngIf="places.length === 0 && !showPlaceForm">
-          <span class="empty-icon">📍</span>
-          <p>Ainda sem locais. Clica em "+ Local" para adicionar.</p>
+        <!-- Type filter tabs -->
+        <div class="booking-tabs">
+          <button
+            class="booking-tab"
+            [class.active]="activeBookingType === 'all'"
+            (click)="activeBookingType = 'all'"
+          >
+            Todas
+          </button>
+          <button
+            class="booking-tab"
+            [class.active]="activeBookingType === 'flight'"
+            (click)="activeBookingType = 'flight'"
+          >
+            ✈️ Voos
+          </button>
+          <button
+            class="booking-tab"
+            [class.active]="activeBookingType === 'hotel'"
+            (click)="activeBookingType = 'hotel'"
+          >
+            🏨 Dormidas
+          </button>
+          <button
+            class="booking-tab"
+            [class.active]="activeBookingType === 'bus'"
+            (click)="activeBookingType = 'bus'"
+          >
+            🚌 Transportes
+          </button>
+          <button
+            class="booking-tab"
+            [class.active]="activeBookingType === 'other'"
+            (click)="activeBookingType = 'other'"
+          >
+            📝 Outros
+          </button>
         </div>
-      </div>
-    </section>
+
+        <!-- Add / Edit form -->
+        <div class="booking-form-panel" *ngIf="showBookingForm">
+          <p class="form-title">{{ editingBooking ? 'Editar reserva' : 'Nova reserva' }}</p>
+
+          <div class="booking-type-picker">
+            <button
+              *ngFor="let t of bookingTypes"
+              class="type-btn"
+              [class.active]="newBookingType === t.value"
+              (click)="newBookingType = t.value"
+            >
+              {{ t.icon }} {{ t.label }}
+            </button>
+          </div>
+
+          <div class="booking-form-fields">
+            <!-- Voo: companhia + nº voo -->
+            <div class="field-row" *ngIf="newBookingType === 'flight'">
+              <div class="field-group">
+                <label>Companhia aérea</label>
+                <input type="text" [(ngModel)]="newBookingAirline" placeholder="Ex: TAP, AA, BA" />
+              </div>
+              <div class="field-group">
+                <label>Nº do voo</label>
+                <input type="text" [(ngModel)]="newBookingFlightNumber" placeholder="Ex: TP123" />
+              </div>
+            </div>
+
+            <!-- Voo / Autocarro: local de partida + chegada + datas -->
+            <ng-container *ngIf="newBookingType === 'flight' || newBookingType === 'bus'">
+              <div class="field-group">
+                <label>Local de partida *</label>
+                <app-autocomplete
+                  mode="airport"
+                  [(value)]="newBookingDepartureLocation"
+                  [placeholder]="
+                    newBookingType === 'flight'
+                      ? 'Ex: Lisboa, LIS, Heathrow...'
+                      : 'Ex: Terminal Lisboa, Oriente...'
+                  "
+                ></app-autocomplete>
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label>Data de partida</label>
+                  <app-date-picker [(value)]="newBookingDate"></app-date-picker>
+                </div>
+                <div class="field-group">
+                  <label>Hora de partida</label>
+                  <app-time-picker [(value)]="newBookingTime"></app-time-picker>
+                </div>
+              </div>
+              <div class="field-group">
+                <label>Local de chegada *</label>
+                <app-autocomplete
+                  mode="airport"
+                  [(value)]="newBookingArrivalLocation"
+                  [placeholder]="
+                    newBookingType === 'flight'
+                      ? 'Ex: Tokyo Narita, NRT, CDG...'
+                      : 'Ex: Estação de Lyon, Flixbus Paris...'
+                  "
+                ></app-autocomplete>
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label>Data de chegada</label>
+                  <app-date-picker [(value)]="newBookingArrivalDate"></app-date-picker>
+                </div>
+                <div class="field-group">
+                  <label>Hora de chegada</label>
+                  <app-time-picker [(value)]="newBookingArrivalTime"></app-time-picker>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Hotel: localização + check-in/check-out -->
+            <ng-container *ngIf="newBookingType === 'hotel'">
+              <div class="field-group">
+                <label>Hotel *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="newBookingLocation"
+                  placeholder="Ex: Marriott Lisboa, Center Cave House Goreme..."
+                />
+              </div>
+              <div class="field-group">
+                <label>Cidade / Morada <span class="label-hint">(para o mapa)</span></label>
+                <app-autocomplete
+                  mode="location"
+                  [(value)]="newBookingLocationCity"
+                  placeholder="Ex: Goreme, Capadócia, Turquia..."
+                  (placePicked)="onHotelCityPicked($event)"
+                ></app-autocomplete>
+              </div>
+              <div class="field-group">
+                <label>Check-in / Check-out</label>
+                <app-date-range-picker
+                  [startDate]="newBookingDate"
+                  [endDate]="newBookingEndDate"
+                  startLabel="Check-in"
+                  endLabel="Check-out"
+                  (rangeChange)="onBookingHotelRangeChange($event)"
+                ></app-date-range-picker>
+              </div>
+            </ng-container>
+
+            <!-- Outro: título + data + hora -->
+            <ng-container *ngIf="newBookingType === 'other'">
+              <div class="field-group">
+                <label>Título *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="newBookingTitle"
+                  placeholder="Ex: Renda de carro, Seguro viagem..."
+                />
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label>Data</label>
+                  <app-date-picker [(value)]="newBookingDate"></app-date-picker>
+                </div>
+                <div class="field-group">
+                  <label>Hora</label>
+                  <app-time-picker [(value)]="newBookingTime"></app-time-picker>
+                </div>
+              </div>
+            </ng-container>
+
+            <button
+              class="btn-show-more"
+              type="button"
+              (click)="newBookingShowMore = !newBookingShowMore"
+            >
+              <span class="btn-show-more-icon">{{ newBookingShowMore ? '▲' : '▼' }}</span>
+              {{ newBookingShowMore ? 'Mostrar menos' : '+ Mais opções' }}
+            </button>
+
+            <ng-container *ngIf="newBookingShowMore">
+              <div class="field-group">
+                <label>Link</label>
+                <input type="text" [(ngModel)]="newBookingLink" placeholder="https://..." />
+              </div>
+              <div class="field-group">
+                <label>Notas</label>
+                <input
+                  type="text"
+                  [(ngModel)]="newBookingNotes"
+                  placeholder="Bagagem incluída, etc."
+                />
+              </div>
+            </ng-container>
+          </div>
+
+          <div class="place-form-actions">
+            <button class="btn-add cancel" (click)="closeBookingForm()">Cancelar</button>
+            <button class="btn-add" (click)="saveBooking()" [disabled]="!isBookingFormValid">
+              {{ editingBooking ? 'Guardar' : 'Adicionar' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Bookings list -->
+        <div class="bookings-list">
+          <div
+            *ngFor="let booking of filteredBookings"
+            class="booking-card"
+            [attr.data-type]="booking.type"
+          >
+            <div class="booking-type-icon">{{ bookingIcon(booking.type) }}</div>
+            <div class="booking-info">
+              <div class="booking-title">{{ booking.title }}</div>
+              <div class="booking-meta">
+                <!-- Flights & buses: departure → arrival -->
+                <ng-container *ngIf="booking.type === 'flight' || booking.type === 'bus'">
+                  <span *ngIf="booking.date"
+                    >✈️ {{ booking.date | date: 'dd/MM/yyyy'
+                    }}<span *ngIf="booking.time"> {{ booking.time }}</span></span
+                  >
+                  <span *ngIf="booking.arrivalDate || booking.arrivalTime">
+                    →
+                    <span *ngIf="booking.arrivalDate">{{
+                      booking.arrivalDate | date: 'dd/MM/yyyy'
+                    }}</span
+                    ><span *ngIf="booking.arrivalTime"> {{ booking.arrivalTime }}</span></span
+                  >
+                </ng-container>
+                <!-- Hotel: check-in → check-out -->
+                <ng-container *ngIf="booking.type === 'hotel'">
+                  <span *ngIf="booking.date">📅 {{ booking.date | date: 'dd/MM/yyyy' }}</span>
+                  <span *ngIf="booking.endDate"> → {{ booking.endDate | date: 'dd/MM/yyyy' }}</span>
+                </ng-container>
+                <!-- Other: date + time -->
+                <ng-container *ngIf="booking.type === 'other'">
+                  <span *ngIf="booking.date">📅 {{ booking.date | date: 'dd/MM/yyyy' }}</span>
+                  <span *ngIf="booking.time">🕐 {{ booking.time }}</span>
+                </ng-container>
+                <span *ngIf="booking.location">📍 {{ booking.location }}</span>
+                <span *ngIf="booking.reference" class="booking-ref"># {{ booking.reference }}</span>
+              </div>
+              <div class="booking-notes" *ngIf="booking.notes">{{ booking.notes }}</div>
+            </div>
+            <div class="booking-actions">
+              <a
+                *ngIf="booking.link"
+                [href]="booking.link"
+                target="_blank"
+                class="btn-booking-link"
+                title="Abrir link"
+              >
+                🔗
+              </a>
+              <button class="btn-booking-edit" (click)="openBookingForm(booking)" title="Editar">
+                ✏️
+              </button>
+              <button class="btn-booking-delete" (click)="deleteBooking(booking)" title="Eliminar">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <div class="booking-empty" *ngIf="filteredBookings.length === 0 && !showBookingForm">
+            <span class="empty-icon">🗂️</span>
+            <p>
+              Nenhuma reserva ainda. Clica em "+ Reserva" para adicionar voos, dormidas ou
+              transportes.
+            </p>
+          </div>
+        </div>
+      </section> </ng-container
+    ><!-- /reservas tab -->
   </div>
 </div>

@@ -27,8 +27,8 @@ export class AutocompleteComponent implements OnInit, OnChanges, OnDestroy {
   private readonly geo = inject(GeoService);
   private readonly el = inject(ElementRef);
 
-  /** 'country' | 'city' | 'place' */
-  @Input() mode: 'country' | 'city' | 'place' = 'country';
+  /** 'country' | 'city' | 'place' | 'location' | 'airport' | 'hotel' */
+  @Input() mode: 'country' | 'city' | 'place' | 'location' | 'airport' | 'hotel' = 'country';
   /** Para mode='city': nome do país selecionado */
   @Input() countryContext = '';
   @Input() value = '';
@@ -50,7 +50,12 @@ export class AutocompleteComponent implements OnInit, OnChanges, OnDestroy {
   private sub = new Subscription();
 
   ngOnInit(): void {
-    if (this.mode === 'place') {
+    if (
+      this.mode === 'place' ||
+      this.mode === 'location' ||
+      this.mode === 'airport' ||
+      this.mode === 'hotel'
+    ) {
       // Pesquisa remota ao escrever
       this.sub.add(
         this.input$
@@ -58,14 +63,17 @@ export class AutocompleteComponent implements OnInit, OnChanges, OnDestroy {
             debounceTime(350),
             distinctUntilChanged(),
             switchMap((q) => {
-              if (q.trim().length < 3) {
+              if (q.trim().length < 2) {
                 this.filtered = [];
                 this.open = false;
                 this.loading = false;
                 return [];
               }
               this.loading = true;
-              return this.geo.searchPlacesByName(q);
+              if (this.mode === 'place') return this.geo.searchPlacesByName(q);
+              if (this.mode === 'airport') return this.geo.searchAirports(q);
+              if (this.mode === 'hotel') return this.geo.searchHotels(q);
+              return this.geo.searchLocation(q);
             }),
           )
           .subscribe({
@@ -137,7 +145,12 @@ export class AutocompleteComponent implements OnInit, OnChanges, OnDestroy {
   pick(name: string): void {
     this.valueChange.emit(name);
     this.selected.emit(name);
-    if (this.mode === 'place') {
+    if (
+      this.mode === 'place' ||
+      this.mode === 'location' ||
+      this.mode === 'airport' ||
+      this.mode === 'hotel'
+    ) {
       const suggestion = this.placeMap.get(name);
       if (suggestion) this.placePicked.emit(suggestion);
     }

@@ -81,15 +81,20 @@ function buildIcon(color: string, label: string): L.DivIcon {
   imports: [CommonModule],
   template: ` <div class="map-shell">
     <div #mapEl class="map-el"></div>
-    <div class="map-no-coords" *ngIf="visible && noCoords">
-      <span>📍</span>
-      <p>Nenhum local tem coordenadas ainda.<br />Usa o autocomplete do Nome para as adicionar.</p>
-    </div>
+    @if (visible && noCoords) {
+      <div class="map-no-coords">
+        <span>📍</span>
+        <p>
+          Nenhum local tem coordenadas ainda.<br />Usa o autocomplete do Nome para as adicionar.
+        </p>
+      </div>
+    }
   </div>`,
   styles: [
     `
       :host {
         display: block;
+        height: 100%;
       }
       .map-shell {
         position: relative;
@@ -101,7 +106,6 @@ function buildIcon(color: string, label: string): L.DivIcon {
         width: 100%;
         height: 100%;
         min-height: 340px;
-        border-radius: 16px;
         z-index: 0;
       }
       .map-no-coords {
@@ -112,7 +116,6 @@ function buildIcon(color: string, label: string): L.DivIcon {
         align-items: center;
         justify-content: center;
         background: #f9fafb;
-        border-radius: 16px;
         gap: 8px;
         color: #9ca3af;
         text-align: center;

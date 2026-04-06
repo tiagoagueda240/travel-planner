@@ -467,3 +467,64 @@ body {
     border-radius: 18px;
   }
 }
+
+/* ===== RESPONSIVE — 480px (small phones) ===== */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 18px 14px;
+  }
+
+  .dash-header {
+    margin-bottom: 24px;
+
+    .header-top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .header-user {
+      .user-email {
+        display: none;
+      }
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: -0.03em;
+    }
+
+    p {
+      font-size: 0.88rem;
+    }
+  }
+
+  .grid-container {
+    gap: 12px;
+  }
+
+  .card {
+    border-radius: 14px;
+  }
+
+  .trip-card {
+    height: 200px;
+
+    .card-overlay {
+      padding: 20px;
+
+      h3 {
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  .form-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .back-link {
+    font-size: 0.82rem;
+  }
+}

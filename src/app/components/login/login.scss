@@ -1253,3 +1253,106 @@ form {
     display: none;
   }
 }
+
+/* ===== RESPONSIVE — 480px (small phones) ===== */
+@media (max-width: 480px) {
+  .lnav {
+    padding: 0 16px;
+    height: 60px;
+  }
+
+  .lnav-word-main,
+  .lnav-word-accent {
+    font-size: 0.85rem;
+  }
+
+  .lnav-pill-group {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .lnav-pill {
+    padding: 7px 10px;
+    font-size: 0.75rem;
+    gap: 4px;
+
+    &--solid span {
+      display: none; // hide icon on tiny screens
+    }
+  }
+
+  .hero {
+    padding-top: 60px;
+    min-height: auto;
+  }
+
+  .ht-line {
+    font-size: clamp(3.2rem, 14vw, 5rem);
+  }
+
+  .hero-badge {
+    padding: 6px 16px;
+    font-size: 0.72rem;
+    margin-bottom: 24px;
+  }
+
+  .hero-sub {
+    font-size: 0.92rem;
+  }
+
+  .hero-ctas {
+    max-width: 100%;
+  }
+
+  .cta-primary {
+    padding: 14px 24px;
+    font-size: 0.9rem;
+  }
+
+  .cta-ghost {
+    padding: 13px 20px;
+    font-size: 0.88rem;
+  }
+
+  .stats-bar {
+    padding: 32px 16px;
+    gap: 24px;
+  }
+
+  .stat-num {
+    font-size: clamp(2.2rem, 10vw, 3rem);
+  }
+
+  .features {
+    padding: 48px 16px;
+  }
+
+  .feat-card {
+    padding: 28px 24px;
+
+    h3 {
+      font-size: 1rem;
+    }
+  }
+
+  .closing-cta {
+    padding: 60px 16px;
+  }
+
+  .closing-title {
+    font-size: clamp(2.2rem, 10vw, 3rem);
+    margin-bottom: 32px;
+  }
+
+  .lfooter {
+    padding: 20px 16px;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .modal-card {
+    padding: 28px 20px;
+    border-radius: 16px;
+  }
+}

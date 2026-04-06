@@ -19,7 +19,7 @@ import {
   where,
 } from '@angular/fire/firestore';
 import { Observable, combineLatest, map, of } from 'rxjs';
-import { City, Country, Itinerary, Place } from '../models/models';
+import { Booking, City, Country, Itinerary, Place, StickyNote } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseService {
@@ -95,6 +95,26 @@ export class FirebaseService {
     return await addDoc(collection(this.firestore, 'itineraries'), { ...itinerary, userId: uid });
   }
 
+  async updateItinerary(id: string, data: Partial<Itinerary>): Promise<void> {
+    await updateDoc(doc(this.firestore, `itineraries/${id}`), data);
+  }
+
+  async deleteItinerary(id: string): Promise<void> {
+    // Cascade: remove all sub-collections before deleting the root document.
+    // Firestore does not delete sub-collections automatically.
+    const [countriesSnap, bookingsSnap, notesSnap] = await Promise.all([
+      getDocs(this.countriesRef(id)),
+      getDocs(this.bookingsRef(id)),
+      getDocs(this.stickyNotesRef(id)),
+    ]);
+    await Promise.all(countriesSnap.docs.map((d) => this.deleteCountry(id, d.id)));
+    await Promise.all([
+      ...bookingsSnap.docs.map((d) => deleteDoc(d.ref)),
+      ...notesSnap.docs.map((d) => deleteDoc(d.ref)),
+    ]);
+    await deleteDoc(doc(this.firestore, `itineraries/${id}`));
+  }
+
   // --- PAÃSES ---
   getCountriesByItinerary(itineraryId: string): Observable<Country[]> {
     return runInInjectionContext(this.injector, () => {
@@ -139,11 +159,37 @@ export class FirebaseService {
     });
   }
 
-  getAllCities(): Observable<City[]> {
+  /** Filtered by itinerary IDs — safe for Firestore security rules */
+  getCitiesForIds(itineraryIds: string[]): Observable<City[]> {
+    if (itineraryIds.length === 0) return of([]);
     return runInInjectionContext(this.injector, () => {
-      return collectionData(collectionGroup(this.firestore, 'cities'), {
-        idField: 'id',
-      }) as Observable<City[]>;
+      const chunks: Observable<City[]>[] = [];
+      for (let i = 0; i < itineraryIds.length; i += 30) {
+        const chunk = itineraryIds.slice(i, i + 30);
+        const q = query(
+          collectionGroup(this.firestore, 'cities'),
+          where('itineraryId', 'in', chunk),
+        );
+        chunks.push(collectionData(q, { idField: 'id' }) as Observable<City[]>);
+      }
+      return chunks.length === 1 ? chunks[0] : combineLatest(chunks).pipe(map((r) => r.flat()));
+    });
+  }
+
+  /** Filtered by itinerary IDs — safe for Firestore security rules */
+  getPlacesForIds(itineraryIds: string[]): Observable<Place[]> {
+    if (itineraryIds.length === 0) return of([]);
+    return runInInjectionContext(this.injector, () => {
+      const chunks: Observable<Place[]>[] = [];
+      for (let i = 0; i < itineraryIds.length; i += 30) {
+        const chunk = itineraryIds.slice(i, i + 30);
+        const q = query(
+          collectionGroup(this.firestore, 'places'),
+          where('itineraryId', 'in', chunk),
+        );
+        chunks.push(collectionData(q, { idField: 'id' }) as Observable<Place[]>);
+      }
+      return chunks.length === 1 ? chunks[0] : combineLatest(chunks).pipe(map((r) => r.flat()));
     });
   }
 
@@ -213,6 +259,62 @@ export class FirebaseService {
     const citiesSnap = await getDocs(this.citiesRef(itineraryId, countryId));
     await Promise.all(citiesSnap.docs.map((d) => this.deleteCity(itineraryId, countryId, d.id)));
     await deleteDoc(this.countryRef(itineraryId, countryId));
+  }
+
+  // --- RESERVAS ---
+  private bookingsRef(itineraryId: string): CollectionReference {
+    return collection(this.firestore, `itineraries/${itineraryId}/bookings`);
+  }
+  private bookingRef(itineraryId: string, bookingId: string): DocumentReference {
+    return doc(this.firestore, `itineraries/${itineraryId}/bookings/${bookingId}`);
+  }
+
+  getBookings(itineraryId: string): Observable<Booking[]> {
+    return runInInjectionContext(this.injector, () => {
+      return collectionData(this.bookingsRef(itineraryId), {
+        idField: 'id',
+      }) as Observable<Booking[]>;
+    });
+  }
+
+  async addBooking(booking: Booking) {
+    return await addDoc(this.bookingsRef(booking.itineraryId), booking);
+  }
+
+  async updateBooking(itineraryId: string, bookingId: string, data: Partial<Booking>) {
+    await updateDoc(this.bookingRef(itineraryId, bookingId), data);
+  }
+
+  async deleteBooking(itineraryId: string, bookingId: string) {
+    await deleteDoc(this.bookingRef(itineraryId, bookingId));
+  }
+
+  // --- STICKY NOTES ---
+  private stickyNotesRef(itineraryId: string): CollectionReference {
+    return collection(this.firestore, `itineraries/${itineraryId}/stickyNotes`);
+  }
+  private stickyNoteRef(itineraryId: string, noteId: string): DocumentReference {
+    return doc(this.firestore, `itineraries/${itineraryId}/stickyNotes/${noteId}`);
+  }
+
+  getStickyNotes(itineraryId: string): Observable<StickyNote[]> {
+    return runInInjectionContext(this.injector, () => {
+      return collectionData(this.stickyNotesRef(itineraryId), {
+        idField: 'id',
+      }) as Observable<StickyNote[]>;
+    });
+  }
+
+  async addStickyNote(note: StickyNote) {
+    return await addDoc(this.stickyNotesRef(note.itineraryId), note);
+  }
+
+  async updateStickyNote(itineraryId: string, noteId: string, data: Partial<StickyNote>) {
+    await updateDoc(this.stickyNoteRef(itineraryId, noteId), data);
+  }
+
+  async deleteStickyNote(itineraryId: string, noteId: string) {
+    await deleteDoc(this.stickyNoteRef(itineraryId, noteId));
   }
 
   // --- PARTILHA ---

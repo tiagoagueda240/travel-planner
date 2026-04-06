@@ -84,6 +84,18 @@ service cloud.firestore {
           }
         }
       }
+
+      // --- RESERVAS ---
+      match /bookings/{bookingId} {
+        allow read: if canRead(itineraryId);
+        allow write: if canEdit(itineraryId);
+      }
+
+      // --- NOTAS RÁPIDAS ---
+      match /stickyNotes/{noteId} {
+        allow read: if canRead(itineraryId);
+        allow write: if canEdit(itineraryId);
+      }
     }
 
     // --- COLLECTION GROUP QUERIES ---

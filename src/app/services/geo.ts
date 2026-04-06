@@ -139,4 +139,73 @@ export class GeoService {
       catchError(() => of([])),
     );
   }
+
+  searchLocation(query: string): Observable<PlaceSuggestion[]> {
+    if (query.trim().length < 3) return of([]);
+    const url = `${this.nominatimBase}/search?q=${encodeURIComponent(query)}&format=json&limit=8&addressdetails=0&dedupe=1`;
+    return this.http.get<NominatimResult[]>(url, { headers: { 'Accept-Language': 'pt' } }).pipe(
+      map((res) =>
+        res.map((r) => ({
+          name: r.display_name.split(',').slice(0, 2).join(', ').trim(),
+          kinds: r.type,
+          lat: parseFloat(r.lat),
+          lon: parseFloat(r.lon),
+        })),
+      ),
+      catchError(() => of([])),
+    );
+  }
+
+  searchAirports(query: string): Observable<PlaceSuggestion[]> {
+    if (query.trim().length < 2) return of([]);
+    const url = `${this.nominatimBase}/search?q=${encodeURIComponent(query + ' aeroporto')}&format=json&limit=12&addressdetails=0&dedupe=1`;
+    return this.http.get<NominatimResult[]>(url, { headers: { 'Accept-Language': 'pt' } }).pipe(
+      map((res) =>
+        res
+          .filter((r) => r.class === 'aeroway' || r.type === 'aerodrome' || r.type === 'airport')
+          .map((r) => ({
+            name: r.display_name.split(',').slice(0, 2).join(', ').trim(),
+            kinds: r.type,
+            lat: parseFloat(r.lat),
+            lon: parseFloat(r.lon),
+          })),
+      ),
+      catchError(() => of([])),
+    );
+  }
+
+  searchHotels(query: string): Observable<PlaceSuggestion[]> {
+    const ACCOMMODATION_CLASSES = ['tourism', 'amenity', 'building'];
+    const ACCOMMODATION_TYPES = [
+      'hotel',
+      'hostel',
+      'motel',
+      'guest_house',
+      'apartment',
+      'chalet',
+      'camp_site',
+      'caravan_site',
+      'resort',
+      'spa',
+      'inn',
+    ];
+    if (query.trim().length < 2) return of([]);
+    const url = `${this.nominatimBase}/search?q=${encodeURIComponent(query)}&format=json&limit=12&addressdetails=0&dedupe=1`;
+    return this.http.get<NominatimResult[]>(url, { headers: { 'Accept-Language': 'pt' } }).pipe(
+      map((res) => {
+        const filtered = res.filter(
+          (r) => ACCOMMODATION_CLASSES.includes(r.class) || ACCOMMODATION_TYPES.includes(r.type),
+        );
+        // Se o filtro não devolver nada, devolve os primeiros 6 resultados sem filtrar
+        const results = filtered.length > 0 ? filtered : res.slice(0, 6);
+        return results.map((r) => ({
+          name: r.display_name.split(',').slice(0, 2).join(', ').trim(),
+          kinds: r.type,
+          lat: parseFloat(r.lat),
+          lon: parseFloat(r.lon),
+        }));
+      }),
+      catchError(() => of([])),
+    );
+  }
 }

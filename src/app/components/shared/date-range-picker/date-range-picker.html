@@ -5,7 +5,7 @@
       [class.active]="showCalendar && selectingType === 'start'"
       (click)="openCalendar('start')"
     >
-      <label>Início</label>
+      <label>{{ startLabel }}</label>
       <span class="drp-value">{{ formatDate(displayStart) }}</span>
     </div>
     <div class="drp-divider"></div>
@@ -14,7 +14,7 @@
       [class.active]="showCalendar && selectingType === 'end'"
       (click)="openCalendar('end')"
     >
-      <label>Fim</label>
+      <label>{{ endLabel }}</label>
       <span class="drp-value">{{ formatDate(displayEnd) }}</span>
     </div>
   </div>

@@ -140,17 +140,50 @@
   }
 }
 
-/* ── MAP PANEL ── */
-.board-map-container {
-  padding: 0 40px 40px;
-  height: calc(100vh - 140px);
-  min-height: 480px;
-  border-radius: 16px;
-  overflow: hidden;
+.btn-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  animation: btnSavePulse 2.5s ease-in-out infinite;
+
+  &:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5);
+    animation: none;
+  }
+
+  &:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    animation: none;
+  }
 }
 
-.hidden-view {
-  display: none;
+@keyframes btnSavePulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    box-shadow: 0 4px 22px rgba(245, 158, 11, 0.6);
+  }
+}
+
+/* ── MAP PANEL (inside itinerary-view, replaces day columns) ── */
+.board-map-main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Restante CSS inalterado... */
@@ -263,7 +296,7 @@
   background: #f8fafc;
 
   .sidebar {
-    width: 400px;
+    width: 300px;
     background: white;
     border-right: 1px solid #eef2f6;
     padding: 32px;
@@ -271,18 +304,156 @@
     flex-direction: column;
     z-index: 50;
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.02);
-    overflow-y: auto;
+    overflow: visible; // allow edge-tab to extrude outside sidebar box
+    position: relative;
+    flex-shrink: 0;
+    transition:
+      width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scroll-wrapper {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+
+    // Gradient edge fades – sit above content, below arrows
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 12px; // clear the scrollbar
+      width: 100px;
+      z-index: 15;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      opacity: 0;
+    }
+    &::before {
+      left: 0;
+      background: linear-gradient(to right, #f8fafc 10%, transparent 100%);
+    }
+    &::after {
+      right: 0;
+      background: linear-gradient(to left, #f8fafc 10%, transparent 100%);
+    }
+    &.fade-left::before {
+      opacity: 1;
+    }
+    &.fade-right::after {
+      opacity: 1;
+    }
   }
 
   .days-container {
     flex: 1;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-    padding: 40px;
-    overflow-y: auto;
-    align-content: start;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 28px 32px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
     scroll-behavior: smooth;
+    scrollbar-width: auto;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+
+    &::-webkit-scrollbar {
+      height: 10px;
+    }
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 99px;
+      margin: 0 32px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 99px;
+      border: 2px solid #f1f5f9;
+
+      &:hover {
+        background: #94a3b8;
+      }
+    }
+  }
+
+  .scroll-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    color: #374151;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.14),
+      0 1px 4px rgba(0, 0, 0, 0.08);
+    transition: all 0.18s;
+    animation: arrowFadeIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+
+    &:hover {
+      background: #f8fafc;
+      transform: translateY(-50%) scale(1.12);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    }
+
+    &:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    &--left {
+      left: 28px;
+    }
+
+    &--right {
+      right: 10px;
+      // Bounce 3 times to hint at more content, then stop
+      animation:
+        arrowFadeIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+        arrowBounce 0.7s ease-in-out 1s 3;
+
+      &:hover {
+        animation: none;
+        transform: translateY(-50%) scale(1.12);
+      }
+    }
+  }
+
+  @keyframes arrowFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-50%) scale(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+  }
+
+  @keyframes arrowBounce {
+    0%,
+    100% {
+      transform: translateY(-50%) translateX(0);
+    }
+    40% {
+      transform: translateY(-50%) translateX(6px);
+    }
+    70% {
+      transform: translateY(-50%) translateX(-2px);
+    }
   }
 }
 
@@ -373,6 +544,21 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   border: 1px solid #f1f5f9;
   transition: transform 0.3s;
+  flex: 0 0 300px;
+  width: 300px;
+  overflow-y: auto;
+  max-height: calc(100vh - 160px);
+  scrollbar-width: thin;
+  scrollbar-color: #f1f5f9 transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
   &:hover {
     transform: translateY(-5px);
   }
@@ -395,6 +581,14 @@
     margin-top: 4px;
     text-transform: capitalize;
   }
+
+  .day-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
   .badge {
     background: #f3f4f6;
     color: #111827;
@@ -402,6 +596,156 @@
     border-radius: 10px;
     font-size: 0.7rem;
     font-weight: 800;
+  }
+}
+
+/* ─── STICKY NOTES ─── */
+.btn-add-note {
+  background: #fef9c3;
+  border: 1.5px solid #fde047;
+  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+  padding: 0;
+
+  &:hover {
+    background: #fef08a;
+    transform: scale(1.1);
+  }
+}
+
+.note-drop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 4px;
+  margin-bottom: 14px;
+
+  &.cdk-drop-list-receiving {
+    background: rgba(254, 249, 195, 0.4);
+    border-radius: 12px;
+    outline: 2px dashed #fde047;
+    outline-offset: 2px;
+  }
+}
+
+.sticky-note {
+  border-radius: 14px;
+  padding: 10px 12px 8px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  border: 1.5px solid rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.11);
+  }
+}
+
+.sticky-note-drag-handle {
+  width: 100%;
+  height: 10px;
+  cursor: grab;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 3px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.sticky-note-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+.sticky-note-text {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #1e1b0e;
+  font-family: inherit;
+  line-height: 1.5;
+  padding: 0;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.3);
+    font-style: italic;
+  }
+}
+
+.sticky-note-colors {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+
+  &.active {
+    border-color: rgba(0, 0, 0, 0.4);
+    transform: scale(1.15);
   }
 }
 
@@ -445,7 +789,7 @@
 
 /* --- ESTADOS VAZIOS --- */
 .board-empty-state {
-  grid-column: 1 / -1;
+  flex: 1;
   width: 100%;
   height: 100%;
   min-height: 400px;
@@ -541,9 +885,8 @@
     }
 
     .days-container {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      padding: 28px;
+      gap: 16px;
+      padding: 20px 24px;
     }
   }
 }
@@ -552,18 +895,34 @@
   .top-nav {
     height: auto;
     min-height: 64px;
-    padding: 12px 20px;
+    padding: 12px 16px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
 
   .nav-left {
+    flex: 1;
+    min-width: 0;
+
     h2 {
       font-size: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
     }
+
     .country-tag {
       display: none;
     }
+  }
+
+  .nav-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
   }
 
   .nav-center {
@@ -579,8 +938,19 @@
   }
 
   .btn-magic {
-    padding: 10px 16px;
-    font-size: 0.8rem;
+    padding: 8px 14px;
+    font-size: 0.78rem;
+  }
+
+  .btn-share,
+  .btn-toggle-map {
+    padding: 8px 14px;
+    font-size: 0.78rem;
+  }
+
+  .btn-save {
+    padding: 8px 14px;
+    font-size: 0.78rem;
   }
 
   .board-container {
@@ -592,6 +962,12 @@
     overflow: visible;
   }
 
+  // On mobile (column layout), the edge tab is replaced by the sidebar's top border.
+  // Hide the side-extruding toggle — it becomes positionally broken in a column flex.
+  .sidebar-tab-anchor {
+    display: none;
+  }
+
   .itinerary-view {
     flex-direction: column;
     overflow: visible;
@@ -599,17 +975,65 @@
     .sidebar {
       width: 100%;
       max-height: 320px;
+      overflow: hidden;
       border-right: none;
       border-bottom: 1px solid #eef2f6;
       box-shadow: none;
+      padding: 20px;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-inner {
+      overflow-y: auto;
     }
 
     .days-container {
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 20px;
-      overflow: visible;
+      flex-direction: column;
+      overflow-x: visible;
+      overflow-y: visible;
+      gap: 12px;
+      padding: 16px;
     }
+  }
+
+  // On mobile, there is no toggle button visible, so always show the sidebar
+  // regardless of the desktop-collapsed state. Override all desktop collapse rules.
+  .sidebar--collapsed {
+    max-height: 320px !important;
+    width: 100% !important;
+    padding: 20px !important;
+    border-bottom: 1px solid #eef2f6 !important;
+    overflow: hidden !important;
+
+    .sidebar-inner {
+      opacity: 1 !important;
+      pointer-events: all !important;
+    }
+  }
+
+  .day-column {
+    // Stacked columns should use natural height, not vp-constrained
+    max-height: none;
+    width: 100%;
+    flex: none;
+    border-radius: 20px;
+    padding: 20px;
+  }
+
+  .progress-bar-container {
+    padding: 8px 16px;
+  }
+
+  .scroll-wrapper {
+    // Not needed in column layout — disable edge fades
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+
+  .scroll-arrow {
+    display: none;
   }
 
   .inventory-view {
@@ -634,5 +1058,381 @@
 
   .empty-inventory {
     padding: 48px 24px;
+  }
+}
+
+/* ===== RESPONSIVE — 480px (small phones) ===== */
+@media (max-width: 480px) {
+  .top-nav {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .nav-left {
+    h2 {
+      font-size: 0.9rem;
+      max-width: 130px;
+    }
+
+    .back-btn {
+      font-size: 1.2rem;
+    }
+  }
+
+  .btn-magic {
+    font-size: 0;
+    padding: 8px 10px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+
+    &::before {
+      content: '🪄';
+      font-size: 1.1rem;
+    }
+  }
+
+  .btn-share {
+    font-size: 0;
+    padding: 8px 10px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+
+    &::before {
+      content: '🔗';
+      font-size: 1.1rem;
+    }
+  }
+
+  .btn-toggle-map {
+    font-size: 0;
+    padding: 8px 10px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+
+    // Gap between icon and hidden text creates extra space — override
+    gap: 0;
+
+    &::before {
+      font-size: 1.1rem;
+    }
+  }
+
+  .btn-save {
+    font-size: 0;
+    padding: 8px 10px;
+    width: 36px;
+    height: 36px;
+    gap: 0;
+    justify-content: center;
+
+    &::before {
+      content: '💾';
+      font-size: 1.1rem;
+    }
+  }
+
+  .itinerary-view {
+    .sidebar {
+      max-height: 260px;
+      padding: 14px;
+    }
+
+    .days-container {
+      gap: 10px;
+      padding: 12px;
+    }
+  }
+
+  .day-column {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .day-header {
+    h3 {
+      font-size: 1.1rem;
+    }
+  }
+
+  .progress-bar-container {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .progress-label {
+    font-size: 0.65rem;
+  }
+
+  .inventory-view {
+    padding: 20px 14px;
+  }
+
+  .board-empty-state {
+    h2 {
+      font-size: 1.4rem;
+    }
+    p {
+      font-size: 0.92rem;
+    }
+  }
+}
+
+/* ── DAY BOOKING CHIPS ── */
+.day-bookings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.day-booking-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.78rem;
+  overflow: hidden;
+
+  &[data-type='flight'] {
+    border-left: 3px solid #6366f1;
+    background: #eef2ff;
+  }
+  &[data-type='hotel'] {
+    border-left: 3px solid #10b981;
+    background: #ecfdf5;
+  }
+  &[data-type='bus'] {
+    border-left: 3px solid #f59e0b;
+    background: #fffbeb;
+  }
+  &[data-type='other'] {
+    border-left: 3px solid #94a3b8;
+  }
+
+  .dbc-icon {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+  }
+
+  .dbc-title {
+    flex: 1;
+    font-weight: 600;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dbc-time {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6b7280;
+    background: rgba(0, 0, 0, 0.06);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+}
+
+/* ── SIDEBAR BOOKINGS ── */
+.sidebar-bookings {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+
+  .sidebar-bookings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+
+    h4 {
+      font-weight: 800;
+      color: #111827;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+}
+
+.sidebar-booking-chip {
+  margin-bottom: 6px;
+  cursor: default;
+}
+
+/* ── SIDEBAR COLLAPSE ── */
+
+// Anchor sits at zero width in the flex row, button extrudes to the left
+.sidebar-tab-anchor {
+  width: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 60;
+  flex-shrink: 0;
+}
+
+// Edge tab extruding from the sidebar's right border
+.sidebar-edge-tab {
+  position: absolute;
+  top: 50%;
+  left: -1px; // overlap the sidebar border
+  transform: translateY(-50%);
+  width: 20px;
+  height: 64px;
+  background: white;
+  border: 1px solid #eef2f6;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.06);
+  transition:
+    background 0.18s,
+    box-shadow 0.18s;
+  padding: 0;
+
+  &:hover {
+    background: #f3f0ff;
+    box-shadow: 4px 0 16px rgba(99, 102, 241, 0.15);
+
+    .toggle-chevron {
+      stroke: #6366f1;
+    }
+  }
+
+  .toggle-chevron {
+    width: 14px;
+    height: 14px;
+    stroke: #9ca3af;
+    flex-shrink: 0;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      stroke 0.18s;
+  }
+
+  &.is-collapsed .toggle-chevron {
+    transform: rotate(180deg);
+    stroke: #6366f1;
+  }
+
+  &.is-collapsed {
+    background: #f3f0ff;
+    border-color: #ddd6fe;
+  }
+}
+
+.sidebar-collapse-btn {
+  display: none;
+}
+
+.btn-sidebar-toggle {
+  display: none;
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  transition: opacity 0.25s 0.05s;
+  opacity: 1;
+}
+
+.sidebar--collapsed {
+  width: 0 !important;
+  padding: 0 !important;
+  border-right: none !important;
+  overflow: hidden !important;
+
+  .sidebar-inner {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* ── PROGRESS BAR ── */
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 40px;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.progress-bar-track {
+  flex: 1;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9ca3af;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── DAY SUMMARY ── */
+.day-summary {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* ── DAY NOTES ── */
+.day-note-textarea {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 12px;
+  resize: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #374151;
+  background: #fafafa;
+  font-family: inherit;
+  line-height: 1.55;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #d1d5db;
+  }
+
+  &:focus {
+    border-color: #c4b5fd;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
   }
 }

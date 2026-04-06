@@ -15,6 +15,16 @@
   </header>
 
   <main class="grid-container">
+    <!-- Sort bar -->
+    <div class="sort-bar">
+      <span class="sort-label">Ordenar por</span>
+      <button class="sort-pill" [class.active]="sortBy === 'date'" (click)="sortBy = 'date'">
+        📅 Data
+      </button>
+      <button class="sort-pill" [class.active]="sortBy === 'name'" (click)="sortBy = 'name'">
+        🔤 Nome
+      </button>
+    </div>
     <div class="card add-card" (click)="toggleAddForm()" *ngIf="!showAddForm">
       <div class="add-card-inner">
         <div class="add-icon-ring"><span>+</span></div>
@@ -57,7 +67,7 @@
     </div>
 
     <a
-      *ngFor="let trip of itineraries"
+      *ngFor="let trip of sortedItineraries"
       [routerLink]="['/itinerario', trip.id]"
       class="card trip-card"
     >
@@ -79,7 +89,19 @@
         <span class="date-label" *ngIf="trip.startDate && trip.endDate">
           {{ trip.startDate | date: 'dd/MM/yyyy' }} – {{ trip.endDate | date: 'dd/MM/yyyy' }}
         </span>
+        <span class="countdown-pill" *ngIf="daysUntilTrip(trip) !== null">
+          {{
+            daysUntilTrip(trip) === 0
+              ? '🎉 Começa hoje!'
+              : '🗓 Faltam ' + daysUntilTrip(trip) + ' dias'
+          }}
+        </span>
         <h3>{{ trip.name }}</h3>
+        <div class="trip-stats" *ngIf="getStats(trip.id).cities > 0">
+          <span *ngIf="getStats(trip.id).countries > 0">🌍 {{ getStats(trip.id).countries }}</span>
+          <span *ngIf="getStats(trip.id).cities > 0">🏙 {{ getStats(trip.id).cities }}</span>
+          <span *ngIf="getStats(trip.id).places > 0">📍 {{ getStats(trip.id).places }}</span>
+        </div>
         <span class="go-link">Ver destino →</span>
       </div>
     </a>

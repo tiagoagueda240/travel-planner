@@ -1,82 +1,78 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { DateRange } from '../../../models/models';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  Output,
+} from '@angular/core';
 
 type CalendarDay = {
   dayNumber: number;
   dateStr: string;
   isCurrentMonth: boolean;
-  isStart: boolean;
-  isEnd: boolean;
-  isBetween: boolean;
+  isSelected: boolean;
 };
 
 @Component({
-  selector: 'app-date-range-picker',
+  selector: 'app-date-picker',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './date-range-picker.html',
-  styleUrls: ['./date-range-picker.scss'],
+  templateUrl: './date-picker.html',
+  styleUrls: ['./date-picker.scss'],
 })
-export class DateRangePickerComponent implements OnChanges {
-  @Input() startDate = '';
-  @Input() endDate = '';
-  @Input() startLabel = 'Início';
-  @Input() endLabel = 'Fim';
-  @Output() rangeChange = new EventEmitter<DateRange>();
+export class DatePickerComponent implements OnChanges {
+  @Input() value = '';
+  @Input() placeholder = 'Selecionar';
+  @Output() valueChange = new EventEmitter<string>();
+
+  constructor(private readonly elRef: ElementRef) {}
+
+  @HostListener('document:click', ['$event.target'])
+  onDocumentClick(target: EventTarget | null): void {
+    if (this.showCalendar && !this.elRef.nativeElement.contains(target as Node)) {
+      this.showCalendar = false;
+    }
+  }
 
   showCalendar = false;
-  selectingType: 'start' | 'end' = 'start';
   currentMonthDate = new Date();
   calendarDays: CalendarDay[] = [];
   readonly weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  private _start = '';
-  private _end = '';
+  private _value = '';
 
-  get displayStart() {
-    return this._start;
-  }
-  get displayEnd() {
-    return this._end;
+  get displayValue(): string {
+    return this._value;
   }
 
-  ngOnChanges() {
-    this._start = this.startDate;
-    this._end = this.endDate;
+  ngOnChanges(): void {
+    this._value = this.value;
   }
 
-  openCalendar(type: 'start' | 'end') {
-    this.selectingType = type;
+  openCalendar(): void {
     this.showCalendar = true;
-    const ref = type === 'start' && this._start ? new Date(this._start + 'T12:00:00') : new Date();
+    const ref = this._value ? new Date(this._value + 'T12:00:00') : new Date();
     this.currentMonthDate = new Date(ref.getFullYear(), ref.getMonth(), 1);
     this.generateCalendar();
   }
 
-  closeCalendar() {
+  closeCalendar(): void {
     this.showCalendar = false;
   }
 
-  selectDate(day: CalendarDay) {
-    if (this.selectingType === 'start') {
-      this._start = day.dateStr;
-      this._end = '';
-      this.selectingType = 'end';
-    } else {
-      if (day.dateStr < this._start) {
-        this._end = this._start;
-        this._start = day.dateStr;
-      } else {
-        this._end = day.dateStr;
-      }
-      this.closeCalendar();
-      this.rangeChange.emit({ startDate: this._start, endDate: this._end });
-    }
+  selectDate(day: CalendarDay, event: Event): void {
+    event.stopPropagation();
+    this._value = day.dateStr;
+    this.valueChange.emit(this._value);
+    this.closeCalendar();
     this.generateCalendar();
   }
 
-  changeMonth(delta: number) {
+  changeMonth(delta: number, event: Event): void {
+    event.stopPropagation();
     this.currentMonthDate = new Date(
       this.currentMonthDate.getFullYear(),
       this.currentMonthDate.getMonth() + delta,
@@ -85,7 +81,7 @@ export class DateRangePickerComponent implements OnChanges {
     this.generateCalendar();
   }
 
-  generateCalendar() {
+  generateCalendar(): void {
     const year = this.currentMonthDate.getFullYear();
     const month = this.currentMonthDate.getMonth();
     const firstDayIndex = new Date(year, month, 1).getDay();
@@ -108,9 +104,7 @@ export class DateRangePickerComponent implements OnChanges {
       dayNumber: date.getDate(),
       dateStr,
       isCurrentMonth,
-      isStart: dateStr === this._start,
-      isEnd: dateStr === this._end,
-      isBetween: !!(this._start && this._end && dateStr > this._start && dateStr < this._end),
+      isSelected: dateStr === this._value,
     };
   }
 
@@ -119,10 +113,12 @@ export class DateRangePickerComponent implements OnChanges {
   }
 
   formatDate(d: string): string {
-    if (!d) return 'Selecionar';
-    return new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: 'short' }).format(
-      new Date(d + 'T12:00:00'),
-    );
+    if (!d) return this.placeholder;
+    return new Intl.DateTimeFormat('pt-PT', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(d + 'T12:00:00'));
   }
 
   get monthYearLabel(): string {

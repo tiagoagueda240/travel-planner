@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import {
   Auth,
   User,
+  authState,
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
 } from '@angular/fire/auth';
@@ -13,9 +13,12 @@ import { Observable } from 'rxjs';
 export class AuthService {
   private auth: Auth = inject(Auth);
 
-  readonly user$: Observable<User | null> = new Observable((subscriber) => {
-    return onAuthStateChanged(this.auth, subscriber);
-  });
+  /**
+   * Emits only after Firebase Auth has finished restoring the persisted session.
+   * Unlike onAuthStateChanged, authState() waits for the SDK to be ready,
+   * preventing guards from reading a false null before auth is initialised.
+   */
+  readonly user$: Observable<User | null> = authState(this.auth);
 
   get currentUser(): User | null {
     return this.auth.currentUser;

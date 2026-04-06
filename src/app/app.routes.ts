@@ -1,24 +1,40 @@
 import { Routes } from '@angular/router';
-import { DashboardComponent } from './components/dashboard/dashboard';
-import { ItineraryBoardComponent } from './components/itinerary/board/itinerary-board';
-import { ItineraryCountriesComponent } from './components/itinerary/countries/itinerary-countries';
-import { PublicViewComponent } from './components/itinerary/public-view/public-view';
-import { LoginComponent } from './components/login/login';
 import { authGuard, guestGuard } from './guards/auth.guard';
+import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
-  { path: '', component: DashboardComponent, canActivate: [authGuard] },
+  {
+    path: 'login',
+    loadComponent: () => import('./components/login/login').then((m) => m.LoginComponent),
+    canActivate: [guestGuard],
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./components/dashboard/dashboard').then((m) => m.DashboardComponent),
+    canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
+  },
   {
     path: 'itinerario/:itineraryId',
-    component: ItineraryCountriesComponent,
+    loadComponent: () =>
+      import('./components/itinerary/countries/itinerary-countries').then(
+        (m) => m.ItineraryCountriesComponent,
+      ),
     canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
   },
   {
     path: 'itinerario/:itineraryId/planear',
-    component: ItineraryBoardComponent,
+    loadComponent: () =>
+      import('./components/itinerary/board/itinerary-board').then((m) => m.ItineraryBoardComponent),
     canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
   },
-  { path: 'partilha/:token', component: PublicViewComponent },
+  {
+    path: 'partilha/:token',
+    loadComponent: () =>
+      import('./components/itinerary/public-view/public-view').then((m) => m.PublicViewComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

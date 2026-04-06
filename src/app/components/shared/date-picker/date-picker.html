@@ -1,0 +1,37 @@
+<div class="dp-wrapper">
+  <div class="dp-capsule" [class.open]="showCalendar" (click)="openCalendar()">
+    <span class="dp-value">{{ formatDate(displayValue) }}</span>
+    <svg class="dp-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5" />
+      <path
+        d="M5 1v3M11 1v3M2 7h12"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+      />
+    </svg>
+  </div>
+
+  <div class="dp-popup" *ngIf="showCalendar">
+    <div class="dp-header">
+      <button class="dp-nav" (click)="changeMonth(-1, $event)">‹</button>
+      <strong>{{ monthYearLabel }}</strong>
+      <button class="dp-nav" (click)="changeMonth(1, $event)">›</button>
+      <button class="dp-nav dp-close" (click)="closeCalendar(); $event.stopPropagation()">×</button>
+    </div>
+    <div class="dp-weekdays">
+      <span *ngFor="let w of weekDays">{{ w }}</span>
+    </div>
+    <div class="dp-grid">
+      <div
+        *ngFor="let day of calendarDays"
+        class="dp-day"
+        [class.other-month]="!day.isCurrentMonth"
+        [class.selected]="day.isSelected"
+        (click)="selectDate(day, $event)"
+      >
+        <span class="dp-day-num">{{ day.dayNumber }}</span>
+      </div>
+    </div>
+  </div>
+</div>
